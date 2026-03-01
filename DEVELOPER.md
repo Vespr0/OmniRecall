@@ -2,6 +2,35 @@
 
 This document outlines the engineering constraints and architectural decisions for the OmniRecall plugin. It is intended for developers contributing to the codebase.
 
+## Developer Quickstart
+
+To build and test the plugin locally, you will need Node.js and `pnpm` installed.
+
+1. **Install Dependencies**
+   \`\`\`bash
+   pnpm install
+   \`\`\`
+
+2. **Development Build (Watch Mode)**
+   _Automatically recompiles on file save._
+   \`\`\`bash
+   pnpm run dev
+   \`\`\`
+
+3. **Production Build**
+   _Minifies and optimizes for release._
+   \`\`\`bash
+   pnpm run build
+   \`\`\`
+
+4. **Run Unit Tests**
+   _Executes the Jest test suite._
+   \`\`\`bash
+   pnpm test
+   \`\`\`
+
+---
+
 ### 1. The Synchronization Constraint
 
 This plugin assumes a hostile synchronization environment (e.g., decentralized P2P via Syncthing).
