@@ -1,0 +1,10 @@
+{
+	"id": "omni-recall",
+	"name": "OmniRecall",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.0",
+	"description": "A spaced repetition flashcard plugin using the FSRS algorithm. Synchronizes via text using inline HTML comments.",
+	"author": "Vespr0",
+	"authorUrl": "https://github.com/Vespr0",
+	"isDesktopOnly": false
+}
