@@ -1,5 +1,14 @@
 import { MarkdownParser } from '../src/parser/parser';
 import { App } from 'obsidian';
+import { FSRSPluginSettings } from '../src/main';
+
+const mockSettings: FSRSPluginSettings = {
+    cache: {},
+    requireFlashcardTag: false,
+    flashcardTag: '#flashcard',
+    inlineDelimiter: '::',
+    multilineDelimiter: '?'
+};
 
 describe('MarkdownParser', () => {
 
@@ -11,7 +20,7 @@ Here is a test:
 Capital of Italy?::Rome
 <!--FSRS:abc123|20260305|1|1|1|1|1-->
         `;
-        const parser = new MarkdownParser(mockApp);
+        const parser = new MarkdownParser(mockApp, mockSettings);
         const cards = parser.fallbackParseText(text);
 
         expect(cards.length).toBe(1);
@@ -25,7 +34,7 @@ Capital of Italy?::Rome
 Just some random text without card syntax.
 <!--FSRS:xyz890|20260305|1|1|1|1|1-->
         `;
-        const parser = new MarkdownParser(mockApp);
+        const parser = new MarkdownParser(mockApp, mockSettings);
         const cards = parser.fallbackParseText(text);
 
         expect(cards.length).toBe(0); // Ghost card ignored
@@ -42,7 +51,7 @@ Back of multiline card
 
 After
         `;
-        const parser = new MarkdownParser(mockApp);
+        const parser = new MarkdownParser(mockApp, mockSettings);
         const cards = parser.fallbackParseText(text);
 
         expect(cards.length).toBe(1);
@@ -71,7 +80,7 @@ my_dict = {"Question"::"Answer"}
             }
         } as unknown as App;
 
-        const parser = new MarkdownParser(mockAppWithCache);
+        const parser = new MarkdownParser(mockAppWithCache, mockSettings);
         const cards = await parser.parseFile(mockFile, text);
 
         expect(cards.length).toBe(0);
@@ -94,7 +103,7 @@ Q::A
             }
         } as unknown as App;
 
-        const parser = new MarkdownParser(mockAppWithCache);
+        const parser = new MarkdownParser(mockAppWithCache, mockSettings);
         const cards = await parser.parseFile(mockFile, text);
 
         expect(cards.length).toBe(1);
@@ -130,7 +139,7 @@ Footer text
             }
         } as unknown as App;
 
-        const parser = new MarkdownParser(mockAppWithCache);
+        const parser = new MarkdownParser(mockAppWithCache, mockSettings);
         const cards = await parser.parseFile(mockFile, text);
 
         expect(cards.length).toBe(1);

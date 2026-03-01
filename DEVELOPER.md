@@ -2,7 +2,11 @@
 
 To build and test the plugin locally, you must map the repository to a local Obsidian test vault.
 
-#### Repository Setup
+## Contribution Guides and Rules
+
+> TODO
+
+## Repository Setup
 
 Clone this repository directly into the plugins folder of a designated Obsidian test vault:
 
@@ -21,7 +25,8 @@ Install Dependencies
 pnpm install
 ```
 
-Development Build (Watch Mode)
+#### Development Build (Watch Mode)
+
 Runs esbuild in watch mode. Saves to .ts files will automatically transpile main.js into the current directory.
 
 ```bash

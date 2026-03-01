@@ -3,13 +3,24 @@ import { CacheManager, CacheData } from './cache/cacheManager';
 import { FSRSMainView, VIEW_TYPE_FSRS_MAIN } from './ui/mainView';
 import { createFSRSDecoration, createBadgeDOM } from './ui/decorations/fsrsDecoration';
 
-interface FSRSPluginSettings {
+import { OmniRecallSettingTab } from './settings';
+
+export interface FSRSPluginSettings {
 	cache: CacheData;
-	// Add weighting parameters here later
+	requireFlashcardTag: boolean;
+	flashcardTag: string;
+	inlineDelimiter: string;
+	multilineDelimiter: string;
+	reviewHistory: Record<string, number>;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
-	cache: {}
+	cache: {},
+	requireFlashcardTag: true,
+	flashcardTag: '#flashcard',
+	inlineDelimiter: '::',
+	multilineDelimiter: '?',
+	reviewHistory: {}
 }
 
 export default class OmniRecallPlugin extends Plugin {
@@ -24,7 +35,7 @@ export default class OmniRecallPlugin extends Plugin {
 		this.cacheManager = new CacheManager(this.app, this.settings.cache, async (data) => {
 			this.settings.cache = data;
 			await this.saveSettings();
-		});
+		}, this.settings);
 
 		this.app.workspace.onLayoutReady(async () => {
 			await this.cacheManager.scanVault();
@@ -52,12 +63,14 @@ export default class OmniRecallPlugin extends Plugin {
 
 		this.registerView(
 			VIEW_TYPE_FSRS_MAIN,
-			(leaf) => new FSRSMainView(leaf, this.cacheManager)
+			(leaf) => new FSRSMainView(leaf, this.cacheManager, this)
 		);
 
 		this.addRibbonIcon('brain-circuit', 'OmniRecall', (evt: MouseEvent) => {
 			this.activateView();
 		});
+
+		this.addSettingTab(new OmniRecallSettingTab(this.app, this));
 
 		this.addCommand({
 			id: 'open-fsrs-review',
@@ -96,7 +109,7 @@ export default class OmniRecallPlugin extends Plugin {
 		});
 
 		// Hide FSRS comments in Live Preview + trigger Spatial Blur logic
-		this.registerEditorExtension(createFSRSDecoration(this.app, this.cacheManager));
+		this.registerEditorExtension(createFSRSDecoration(this.app, this.cacheManager, this.settings));
 
 		// Basic setup done.
 	}

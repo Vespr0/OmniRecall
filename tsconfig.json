@@ -14,11 +14,12 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true,
+		"verbatimModuleSyntax": false,
 		"lib": ["DOM", "ES2022"],
 		"typeRoots": [
 			"./node_modules/@types"
 		],
-		"types": ["jest", "node"]
+		"types": ["jest", "node", "svelte"]
 	},
-	"include": ["**/*.ts"]
+	"include": ["**/*.ts", "**/*.svelte"]
 }

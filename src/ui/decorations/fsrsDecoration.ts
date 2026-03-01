@@ -12,37 +12,59 @@ import { parseFSRSString } from '../../fsrs/dataMap';
 import { State } from 'ts-fsrs';
 import { App } from 'obsidian';
 import { CacheManager } from '../../cache/cacheManager';
+import { FSRSPluginSettings } from '../../main';
 
-export function createBadgeDOM(fsrsString: string): HTMLElement {
+export function createBadgeDOM(fsrsString: string, settings?: FSRSPluginSettings): HTMLElement {
     const span = document.createElement("span");
     span.className = "fsrs-indicator";
-    span.innerText = " 🧠 ● "; // Colored dot
-    span.style.fontSize = "0.8em";
+    span.style.fontSize = "0.75em";
     span.style.cursor = "help";
-    span.style.margin = "0 4px";
+    span.style.margin = "0 6px";
+    span.style.padding = "2px 8px";
+    span.style.borderRadius = "10px";
+    span.style.verticalAlign = "text-bottom";
+    span.style.fontWeight = "bold";
     
     const parsed = parseFSRSString(fsrsString);
     if (!parsed) {
         span.style.color = "var(--text-muted)";
-        span.title = "Invalid FSRS Data";
+        span.style.border = "1px solid var(--text-faint)";
+        span.innerText = "Invalid Card";
+        span.title = "FSRS block is malformed";
         return span;
     }
 
     const card = parsed.card;
     const now = new Date();
     
-    // Determine color
+    // Determine status UI
+    let color = "";
+    let bgColor = "";
+    let label = "";
+
     if (card.state === State.Review) {
         if (card.due <= now) {
-            span.style.color = "var(--color-red)"; // Due
+            color = "var(--color-red)";
+            bgColor = "rgba(var(--color-red-rgb), 0.1)";
+            label = "🧠 Due";
         } else {
-            span.style.color = "var(--color-green)"; // Mature
+            color = "var(--color-green)";
+            bgColor = "rgba(var(--color-green-rgb), 0.1)";
+            label = "🧠 Mature";
         }
     } else if (card.state === State.Learning || card.state === State.Relearning) {
-        span.style.color = "var(--color-blue)"; // Learning
+        color = "var(--color-blue)";
+        bgColor = "rgba(var(--color-blue-rgb), 0.1)";
+        label = "🧠 Learning";
     } else {
-        span.style.color = "var(--text-muted)"; // New or other
+        color = "var(--text-muted)";
+        bgColor = "var(--background-modifier-border)";
+        label = "🧠 New";
     }
+
+    span.style.color = color;
+    span.style.backgroundColor = bgColor;
+    span.innerText = label;
 
     // Format tooltip
     const dueStr = card.due.toISOString().split('T')[0];
@@ -55,18 +77,20 @@ export function createBadgeDOM(fsrsString: string): HTMLElement {
 
 class FSRSIconWidget extends WidgetType {
     private fsrsString: string;
+    private settings: FSRSPluginSettings;
 
-    constructor(fsrsString: string) {
+    constructor(fsrsString: string, settings: FSRSPluginSettings) {
         super();
         this.fsrsString = fsrsString;
+        this.settings = settings;
     }
 
     toDOM() {
-        return createBadgeDOM(this.fsrsString);
+        return createBadgeDOM(this.fsrsString, this.settings);
     }
 }
 
-export const createFSRSDecoration = (app: App, cacheManager: CacheManager) => ViewPlugin.fromClass(class {
+export const createFSRSDecoration = (app: App, cacheManager: CacheManager, settings: FSRSPluginSettings) => ViewPlugin.fromClass(class {
     decorations: DecorationSet;
 
     constructor(view: EditorView) {
@@ -111,7 +135,7 @@ export const createFSRSDecoration = (app: App, cacheManager: CacheManager) => Vi
                     matchStart, 
                     matchEnd, 
                     Decoration.replace({
-                        widget: new FSRSIconWidget(match[0])
+                        widget: new FSRSIconWidget(match[0], settings)
                     })
                 );
             }

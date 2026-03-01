@@ -1,6 +1,7 @@
-import { App, TFile } from 'obsidian';
+import { App, TFile, Events } from 'obsidian';
 import { MarkdownParser, Flashcard } from '../parser/parser';
-import { generateNewFSRSString, FSRS_REGEX } from '../fsrs/dataMap';
+import { generateNewFSRSString, FSRS_REGEX, SerializedFSRSData } from '../fsrs/dataMap';
+import { FSRSPluginSettings } from '../main';
 
 export interface CacheEntry {
     mtime: number;
@@ -9,7 +10,7 @@ export interface CacheEntry {
 
 export type CacheData = Record<string, CacheEntry>;
 
-export class CacheManager {
+export class CacheManager extends Events {
     private app: App;
     private parser: MarkdownParser;
     private data: CacheData = {};
@@ -17,10 +18,11 @@ export class CacheManager {
     private unbornWrites: Map<string, string> = new Map(); // filePath -> newContent
     private unbornRanges: Map<string, { start: number, end: number }[]> = new Map(); // filePath -> ranges
 
-    constructor(app: App, initialData: CacheData, saveCallback: (data: CacheData) => Promise<void>) {
+    constructor(app: App, initialData: CacheData, saveCallback: (data: CacheData) => Promise<void>, settings: FSRSPluginSettings) {
+        super();
         this.app = app;
         this.data = initialData || {};
-        this.parser = new MarkdownParser(app);
+        this.parser = new MarkdownParser(app, settings);
         this.saveCallback = saveCallback;
     }
 
@@ -35,7 +37,7 @@ export class CacheManager {
         for (const file of files) {
             const cached = this.data[file.path];
             if (!cached || cached.mtime !== file.stat.mtime) {
-                await this.processFile(file);
+                await this.processFile(file, true);
                 changed = true;
             }
         }
@@ -51,12 +53,19 @@ export class CacheManager {
 
         if (changed) {
             await this.saveCallback(this.data);
+            this.trigger('update');
         }
     }
 
-    public async processFile(file: TFile) {
+    public async processFile(file: TFile, skipTrigger = false) {
         const content = await this.app.vault.read(file);
         const cards = await this.parser.parseFile(file, content);
+
+        let previousCards: Flashcard[] = [];
+        const oldUnbornContent = this.unbornWrites.get(file.path);
+        if (oldUnbornContent) {
+            previousCards = this.parser.fallbackParseText(oldUnbornContent);
+        }
 
         // Check for new cards that need an FSRS state injected
         let needsWrite = false;
@@ -67,7 +76,19 @@ export class CacheManager {
             const card = cards[i];
             if (!card.fsrsData) {
                 needsWrite = true;
-                const injectionString = '\n' + generateNewFSRSString();
+                
+                const matchedPrevCard = previousCards.find(c => 
+                    (c.type === card.type) && 
+                    ((c.front === card.front && c.back === card.back) || c.startIndex === card.startIndex)
+                );
+
+                let injectionString = '';
+                if (matchedPrevCard && matchedPrevCard.fsrsData) {
+                    injectionString = ' ' + matchedPrevCard.fsrsData.rawString;
+                } else {
+                    injectionString = ' ' + generateNewFSRSString();
+                }
+
                 // Inject right after the card ends
                 newContent = newContent.substring(0, card.endIndex) + injectionString + newContent.substring(card.endIndex);
             }
@@ -100,6 +121,10 @@ export class CacheManager {
                 cards: cards.filter(c => c.fsrsData !== null) // Only cache valid tracked cards
             };
         }
+
+        if (!skipTrigger) {
+            this.trigger('update');
+        }
     }
 
     public hasUnborn(filePath: string): boolean {
@@ -117,6 +142,7 @@ export class CacheManager {
             this.unbornRanges.delete(file.path);
             await this.app.vault.modify(file, content);
             // The metadataCache 'changed' event will re-trigger processFile to fully register the cards
+            this.trigger('update');
         }
     }
 
@@ -134,6 +160,18 @@ export class CacheManager {
         
         // Wait a small amount of time for Obsidian to fire the metadataCache changed events
         await new Promise(resolve => setTimeout(resolve, 500));
+        this.trigger('update');
+    }
+
+    public updateCardFsrsData(filePath: string, cardId: string, fsrsData: SerializedFSRSData) {
+        const entry = this.data[filePath];
+        if (entry) {
+            const card = entry.cards.find(c => c.fsrsData?.id === cardId);
+            if (card) {
+                card.fsrsData = fsrsData;
+                this.trigger('update');
+            }
+        }
     }
 
     public getReviewQueue(): { file: string, card: Flashcard }[] {
