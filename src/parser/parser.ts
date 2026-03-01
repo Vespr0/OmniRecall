@@ -68,24 +68,50 @@ export class MarkdownParser {
                     type: 'inline'
                 });
             }
+        }
 
-            // 2. Parse Multiline Flashcards within valid blocks
-            // Look for `\n?\n` cleanly separating front and back
-            const qIndex = blockText.indexOf('\n?\n');
+        // 2. Parse Multiline Flashcards
+        // Note: Obsidian AST parses paragraphs separated by blank lines into separate section objects.
+        // This means a multiline card of [Paragraph \n?\n Paragraph] spans multiple AST nodes.
+        // We iterate the original split methodology, but ONLY accept it if the start/end bounds fall within valid AST sections.
+
+        const blocks = text.split(/\n{2,}/);
+        let currentOffset = 0;
+        
+        for (let j = 0; j < blocks.length; j++) {
+            const block = blocks[j];
+            const qIndex = block.indexOf('\n?\n');
+            
             if (qIndex !== -1) {
-                const front = blockText.substring(0, qIndex).trim();
-                const back = blockText.substring(qIndex + 3).replace(new RegExp(FSRS_REGEX.source, 'g'), '').trim();
+                const blockStartIndex = text.indexOf(block, currentOffset);
+                const blockEndIndex = blockStartIndex + block.length;
                 
-                const fsrsData = this.checkForFSRSComment(text, sectionEndIndex - this.getTrailingFSRSTextLength(blockText));
+                // Verify this block falls within valid AST territory (not inside a code block or math block)
+                const isInsideValidAst = sections.some(sec => 
+                    this.ALLOWED_BLOCKS.has(sec.type) && 
+                    ((blockStartIndex >= sec.position.start.offset && blockStartIndex <= sec.position.end.offset) ||
+                     (blockEndIndex >= sec.position.start.offset && blockEndIndex <= sec.position.end.offset))
+                );
 
-                cards.push({
-                    front,
-                    back,
-                    fsrsData,
-                    startIndex: sectionStartIndex,
-                    endIndex: fsrsData ? sectionEndIndex : sectionEndIndex, // Section boundaries already surround it
-                    type: 'multiline'
-                });
+                if (isInsideValidAst) {
+                    const front = block.substring(0, qIndex).trim();
+                    const back = block.substring(qIndex + 3).replace(new RegExp(FSRS_REGEX.source, 'g'), '').trim();
+                    
+                    const fsrsData = this.checkForFSRSComment(text, blockEndIndex - this.getTrailingFSRSTextLength(block));
+
+                    cards.push({
+                        front,
+                        back,
+                        fsrsData,
+                        startIndex: blockStartIndex,
+                        endIndex: fsrsData ? blockEndIndex : blockEndIndex,
+                        type: 'multiline'
+                    });
+                }
+                
+                currentOffset = blockEndIndex;
+            } else {
+                currentOffset = text.indexOf(block, currentOffset) + block.length;
             }
         }
 

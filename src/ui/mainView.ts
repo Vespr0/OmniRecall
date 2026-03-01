@@ -5,7 +5,7 @@ import { FSRSEngine } from '../fsrs/engine';
 import { Rating } from 'ts-fsrs';
 import { serializeFSRSCard } from '../fsrs/dataMap';
 
-export const VIEW_TYPE_FSRS_MAIN = "fsrs-main-view";
+export const VIEW_TYPE_FSRS_MAIN = "omnirecall-main-view";
 
 enum ViewState {
     Menu,

@@ -49,6 +49,7 @@ When you finish typing and move your cursor away, the plugin will automatically 
 - [ ] A time guessing system that tells you how much time it would take you to review all the cards you have due that day.
 - [ ] Rewrite the UI in Svelte 5.
 - [ ] Cramming mode to allow you to review cards that aren't due.
+- [ ] Extensive plugin settings.
 
 ### Installation
 

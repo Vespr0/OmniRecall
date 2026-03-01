@@ -101,4 +101,41 @@ Q::A
         expect(cards[0].front).toBe('Q');
         expect(cards[0].back).toBe('A');
     });
+
+    it('AST parser should extract multiline flashcards', async () => {
+        const text = `
+Here is a normal card
+
+Front of multiline
+?
+Back of multiline
+<!--FSRS:multi1|20260305|1|1|1|1|1-->
+
+Footer text
+        `;
+        
+        // Note: Obsidian AST parses paragraphs separated by blank lines.
+        // A multiline card without blockquotes might actually be split into multiple paragraph sections by Obsidian.
+        // Let's mock a single paragraph for the whole block for now.
+        const mockFile = {} as any;
+        const mockAppWithCache = {
+            metadataCache: {
+                getFileCache: (file: any) => ({
+                    sections: [
+                        { type: 'paragraph', position: { start: { offset: 1 }, end: { offset: 23 } } },
+                        { type: 'paragraph', position: { start: { offset: 25 }, end: { offset: 104 } } },
+                        { type: 'paragraph', position: { start: { offset: 106 }, end: { offset: 117 } } }
+                    ]
+                })
+            }
+        } as unknown as App;
+
+        const parser = new MarkdownParser(mockAppWithCache);
+        const cards = await parser.parseFile(mockFile, text);
+
+        expect(cards.length).toBe(1);
+        expect(cards[0].front).toBe('Front of multiline');
+        expect(cards[0].back).toBe('Back of multiline');
+        expect(cards[0].type).toBe('multiline');
+    });
 });
