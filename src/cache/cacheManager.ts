@@ -21,9 +21,28 @@ export class CacheManager extends Events {
     constructor(app: App, initialData: CacheData, saveCallback: (data: CacheData) => Promise<void>, settings: FSRSPluginSettings) {
         super();
         this.app = app;
-        this.data = initialData || {};
+        this.data = this.rehydrateCache(initialData || {});
         this.parser = new MarkdownParser(app, settings);
         this.saveCallback = saveCallback;
+    }
+
+    private rehydrateCache(data: CacheData): CacheData {
+        for (const filePath in data) {
+            const entry = data[filePath];
+            if (entry && entry.cards) {
+                for (const card of entry.cards) {
+                    if (card.fsrsData && card.fsrsData.card) {
+                        if (typeof card.fsrsData.card.due === 'string') {
+                            card.fsrsData.card.due = new Date(card.fsrsData.card.due);
+                        }
+                        if (typeof card.fsrsData.card.last_review === 'string') {
+                            card.fsrsData.card.last_review = new Date(card.fsrsData.card.last_review);
+                        }
+                    }
+                }
+            }
+        }
+        return data;
     }
 
     public getCacheData(): CacheData {

@@ -53,7 +53,7 @@
     {#each ratings as r}
       <button
         class="rating-btn"
-        style="background-color: {r.color}; border-color: {r.color};"
+        style="border-color: {r.color};"
         onclick={(e) => {
           e.stopPropagation();
           onGrade(r.rating);
@@ -85,17 +85,24 @@
     flex-direction: column;
     align-items: center;
     padding: 10px 20px;
-    border: 1px solid;
-    color: white;
+    background-color: var(--interactive-normal);
+    border: 2px solid var(--background-modifier-border);
+    color: var(--text-normal);
     font-weight: bold;
     cursor: pointer;
     border-radius: 5px;
     min-width: 80px;
+    transition: background-color 0.15s ease;
+  }
+
+  .rating-btn:hover {
+    background-color: var(--interactive-hover);
   }
 
   .due-text {
     font-size: 0.8em;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-muted);
     font-weight: normal;
+    margin-top: 2px;
   }
 </style>
