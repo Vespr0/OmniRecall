@@ -36,7 +36,7 @@ export class FSRSMainView extends ItemView {
     }
 
     getDisplayText(): string {
-        return "FSRS Flashcards";
+        return "OmniRecall";
     }
 
     async onOpen() {
@@ -67,7 +67,7 @@ export class FSRSMainView extends ItemView {
     private renderMenu(container: HTMLElement) {
         container.style.alignItems = 'center';
         
-        container.createEl('h2', { text: 'FSRS Statistics' });
+        container.createEl('h2', { text: 'OmniRecall Statistics' });
         const statsBox = container.createDiv();
         statsBox.style.width = '100%';
         statsBox.style.height = '150px';

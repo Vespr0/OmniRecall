@@ -12,12 +12,12 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
 	cache: {}
 }
 
-export default class FSRSPlugin extends Plugin {
+export default class OmniRecallPlugin extends Plugin {
 	settings!: FSRSPluginSettings;
 	cacheManager!: CacheManager;
 
 	async onload() {
-		console.log('Loading FSRS Flashcards plugin');
+		console.log('Loading OmniRecall plugin');
 		
 		await this.loadSettings();
 
@@ -55,13 +55,13 @@ export default class FSRSPlugin extends Plugin {
 			(leaf) => new FSRSMainView(leaf, this.cacheManager)
 		);
 
-		this.addRibbonIcon('brain-circuit', 'FSRS Flashcards', (evt: MouseEvent) => {
+		this.addRibbonIcon('brain-circuit', 'OmniRecall', (evt: MouseEvent) => {
 			this.activateView();
 		});
 
 		this.addCommand({
 			id: 'open-fsrs-review',
-			name: 'Open FSRS Review',
+			name: 'Open OmniRecall Review',
 			callback: () => {
 				this.activateView();
 			}
@@ -122,7 +122,7 @@ export default class FSRSPlugin extends Plugin {
 	}
 
 	onunload() {
-		console.log('Unloading FSRS Flashcards plugin');
+		console.log('Unloading OmniRecall plugin');
 	}
 
 	async loadSettings() {

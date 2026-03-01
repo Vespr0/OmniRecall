@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-fsrs",
+  "name": "omni-recall",
   "version": "1.0.0",
-  "description": "FSRS spaced repetition flashcards for Obsidian",
+  "description": "OmniRecall spaced repetition flashcards for Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

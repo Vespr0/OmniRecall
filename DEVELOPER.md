@@ -1,6 +1,6 @@
-Architecture Specification: Obsidian FSRS
+# Architecture Specification for OmniRecall
 
-This document outlines the engineering constraints and architectural decisions for the Obsidian FSRS plugin. It is intended for developers contributing to the codebase.
+This document outlines the engineering constraints and architectural decisions for the OmniRecall plugin. It is intended for developers contributing to the codebase.
 
 ### 1. The Synchronization Constraint
 
