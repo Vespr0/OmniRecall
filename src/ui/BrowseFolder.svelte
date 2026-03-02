@@ -11,8 +11,10 @@
     depth: number;
   } = $props();
 
-  let keys = Object.keys(node).filter(
-    (k) => k !== "_file" && k !== "path" && k !== "count",
+  let keys = $derived(
+    Object.keys(node).filter(
+      (k) => k !== "_file" && k !== "path" && k !== "count",
+    ),
   );
 
   // Manage expanded states for folders
@@ -28,7 +30,7 @@
     {#if node[key]._file}
       <div class="file">📄 {key} ({node[key].count} cards)</div>
     {:else}
-      <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
       <div
         class="folder-header"
         onclick={() => toggle(key)}

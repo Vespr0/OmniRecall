@@ -13,27 +13,28 @@
     onBack: () => void;
   } = $props();
 
-  let tree: Record<string, any> = {};
+  let tree = $derived.by(() => {
+    const t: Record<string, any> = {};
+    const cache = cacheManager.getCacheData();
+    for (const filePath in cache) {
+      const cards = cache[filePath].cards.filter((c) => c.fsrsData !== null);
+      if (cards.length === 0) continue;
 
-  // Group cards by folder
-  const cache = cacheManager.getCacheData();
-  for (const filePath in cache) {
-    const cards = cache[filePath].cards.filter((c) => c.fsrsData !== null);
-    if (cards.length === 0) continue;
-
-    const parts = filePath.split("/");
-    let current = tree;
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (!current[part]) {
-        current[part] =
-          i === parts.length - 1
-            ? { _file: true, path: filePath, count: cards.length }
-            : {};
+      const parts = filePath.split("/");
+      let current = t;
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (!current[part]) {
+          current[part] =
+            i === parts.length - 1
+              ? { _file: true, path: filePath, count: cards.length }
+              : {};
+        }
+        current = current[part];
       }
-      current = current[part];
     }
-  }
+    return t;
+  });
 </script>
 
 <div class="browse-header">

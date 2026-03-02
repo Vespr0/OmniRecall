@@ -26,13 +26,10 @@
     plugin: OmniRecallPlugin;
   } = $props();
 
-  enum ViewState {
-    MENU,
-    REVIEW,
-    BROWSE,
-  }
+  const ViewState = { MENU: 0, REVIEW: 1, BROWSE: 2 } as const;
+  type ViewStateType = (typeof ViewState)[keyof typeof ViewState];
 
-  let currentState: ViewState = $state(ViewState.MENU);
+  let currentState: ViewStateType = $state(ViewState.MENU);
 
   function goMenu() {
     currentState = ViewState.MENU;

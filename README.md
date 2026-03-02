@@ -39,6 +39,7 @@ When you finish typing and move your cursor away, the plugin will automatically 
 - [ ] A time guessing system that tells you how much time it would take you to review all the cards you have due that day.
 - [ ] Cramming mode to allow you to review cards that aren't due.
 - [ ] Show not just the card front but also the headers hierarchy above and file name
+- [ ] Allow users to review specific folders or files from the browse section
 
 ### Installation
 
