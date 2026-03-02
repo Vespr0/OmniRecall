@@ -1,6 +1,6 @@
 {
   "name": "omnirecall",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OmniRecall spaced repetition flashcards for Obsidian",
   "main": "main.js",
   "scripts": {
