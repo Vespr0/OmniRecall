@@ -4,3 +4,4 @@ data.json
 *.txt
 .DS_Store
 .vscode/
+_agents

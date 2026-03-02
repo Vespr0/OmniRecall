@@ -12,6 +12,8 @@ export interface FSRSPluginSettings {
 	inlineDelimiter: string;
 	multilineDelimiter: string;
 	reviewHistory: Record<string, number>;
+	requestRetention: number;
+	showIntervalPredictions: boolean;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
@@ -20,7 +22,9 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
 	flashcardTag: '#flashcard',
 	inlineDelimiter: '::',
 	multilineDelimiter: '?',
-	reviewHistory: {}
+	reviewHistory: {},
+	requestRetention: 0.9,
+	showIntervalPredictions: false
 }
 
 export default class OmniRecallPlugin extends Plugin {

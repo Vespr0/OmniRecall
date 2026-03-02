@@ -121,18 +121,19 @@
 
   .heatmap-wrapper {
     background: var(--background-secondary);
-    padding: 24px;
+    padding: 16px;
     border-radius: 10px;
     border: 1px solid var(--background-modifier-border);
     width: 100%;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   .heatmap-grid {
     display: grid;
     /* 7 columns for 7 days of the week */
     grid-template-columns: repeat(7, 1fr);
-    grid-gap: 12px;
+    gap: clamp(4px, 2%, 10px);
     width: 100%;
     box-sizing: border-box;
   }

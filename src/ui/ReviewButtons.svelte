@@ -7,14 +7,19 @@
     fsrsEngine,
     currentItem,
     onGrade,
+    showIntervalPredictions = false,
   }: {
     fsrsEngine: FSRSEngine;
     currentItem: { file: string; card: Flashcard } | undefined;
     onGrade: (rating: Rating) => void;
+    showIntervalPredictions?: boolean;
   } = $props();
 
-  const ratings = [
+  const fail = [
     { rating: Rating.Again, text: "Again", color: "var(--color-red)" },
+  ];
+
+  const pass = [
     { rating: Rating.Hard, text: "Hard", color: "var(--color-orange)" },
     { rating: Rating.Good, text: "Good", color: "var(--color-green)" },
     { rating: Rating.Easy, text: "Easy", color: "var(--color-blue)" },
@@ -50,7 +55,7 @@
 
 <div class="fsrs-buttons">
   {#if currentItem}
-    {#each ratings as r}
+    {#each fail as r}
       <button
         class="rating-btn"
         style="border-color: {r.color};"
@@ -60,7 +65,30 @@
         }}
       >
         <span>{r.text}</span>
-        {#if getNextDueInfo(currentItem.card, r.rating)}
+        {#if showIntervalPredictions && getNextDueInfo(currentItem.card, r.rating)}
+          <span class="due-text"
+            >{getNextDueInfo(currentItem.card, r.rating)}</span
+          >
+        {/if}
+      </button>
+    {/each}
+
+    <div
+      class="separator"
+      title="Recalled? Hard / Good / Easy. Failed? Again."
+    ></div>
+
+    {#each pass as r}
+      <button
+        class="rating-btn"
+        style="border-color: {r.color};"
+        onclick={(e) => {
+          e.stopPropagation();
+          onGrade(r.rating);
+        }}
+      >
+        <span>{r.text}</span>
+        {#if showIntervalPredictions && getNextDueInfo(currentItem.card, r.rating)}
           <span class="due-text"
             >{getNextDueInfo(currentItem.card, r.rating)}</span
           >
@@ -84,19 +112,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 20px;
+    padding: 18px 16px;
     background-color: var(--interactive-normal);
     border: 2px solid var(--background-modifier-border);
     color: var(--text-normal);
     font-weight: bold;
     cursor: pointer;
     border-radius: 5px;
-    min-width: 80px;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
     transition: background-color 0.15s ease;
   }
 
   .rating-btn:hover {
     background-color: var(--interactive-hover);
+  }
+
+  .separator {
+    width: 1px;
+    align-self: stretch;
+    background-color: var(--background-modifier-border);
+    margin: 0 4px;
+    flex-shrink: 0;
+    cursor: default;
   }
 
   .due-text {

@@ -16,8 +16,8 @@ export class FSRSMainView extends ItemView {
     constructor(leaf: WorkspaceLeaf, cacheManager: CacheManager, plugin: OmniRecallPlugin) {
         super(leaf);
         this.cacheManager = cacheManager;
-        this.fsrsEngine = new FSRSEngine();
         this.plugin = plugin;
+        this.fsrsEngine = new FSRSEngine(this.plugin.settings.requestRetention);
     }
 
     getViewType(): string {

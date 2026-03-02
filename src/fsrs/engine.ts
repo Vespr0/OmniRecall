@@ -3,12 +3,12 @@ import { FSRS, fsrs, generatorParameters, Card, Rating, ReviewLog } from 'ts-fsr
 export class FSRSEngine {
     private f: FSRS;
 
-    constructor(customWeights?: number[]) {
+    constructor(requestRetention: number = 0.9, customWeights?: number[]) {
         if (customWeights && customWeights.length === 17) {
-            const params = generatorParameters({ w: customWeights, maximum_interval: 36500 });
+            const params = generatorParameters({ request_retention: requestRetention, w: customWeights, maximum_interval: 36500 });
             this.f = fsrs(params);
         } else {
-            const params = generatorParameters({ maximum_interval: 36500 });
+            const params = generatorParameters({ request_retention: requestRetention, maximum_interval: 36500 });
             this.f = fsrs(params);
         }
     }
@@ -16,9 +16,12 @@ export class FSRSEngine {
     /**
      * Recreate FSRS instance if weights change
      */
-    public updateWeights(customWeights: number[]) {
-        if (customWeights.length === 17) {
-            const params = generatorParameters({ w: customWeights, maximum_interval: 36500 });
+    public updateWeights(requestRetention: number, customWeights: number[] = []) {
+        if (customWeights && customWeights.length === 17) {
+            const params = generatorParameters({ request_retention: requestRetention, w: customWeights, maximum_interval: 36500 });
+            this.f = fsrs(params);
+        } else {
+            const params = generatorParameters({ request_retention: requestRetention, maximum_interval: 36500 });
             this.f = fsrs(params);
         }
     }

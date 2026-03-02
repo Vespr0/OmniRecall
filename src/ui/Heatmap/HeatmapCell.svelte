@@ -5,33 +5,41 @@
     day: { date: string; count: number };
   } = $props();
 
-  // Calculate opacity based on count. Let's say max 50 for max opacity
-  function getOpacity(count: number) {
-    if (count === 0) return 0.1;
-    return Math.min(1, 0.2 + (count / 50) * 0.8);
+  function getAlpha(count: number): number {
+    if (count === 0) return 0.08;
+    return Math.min(1, 0.25 + (count / 30) * 0.75);
   }
 </script>
 
 <div
   class="heatmap-cell"
   title="{day.date}: {day.count} reviews"
-  style="background-color: var(--interactive-accent); opacity: {getOpacity(
+  style="background-color: var(--interactive-accent); opacity: {getAlpha(
     day.count,
   )};"
-></div>
+>
+  {#if day.count > 0}
+    <span class="cell-count">{day.count}</span>
+  {/if}
+</div>
 
 <style>
   .heatmap-cell {
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: transform 0.1s ease;
-    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .heatmap-cell:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  .cell-count {
+    font-size: 11px;
+    font-weight: 700;
+    /* Rendered at 1/opacity so it appears fully opaque visually */
+    color: white;
+    mix-blend-mode: overlay;
+    pointer-events: none;
   }
 </style>

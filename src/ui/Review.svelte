@@ -133,7 +133,12 @@
       {isShowingAnswer}
       onShowAnswer={showAnswer}
     >
-      <ReviewButtons {fsrsEngine} {currentItem} onGrade={processReview} />
+      <ReviewButtons
+        {fsrsEngine}
+        {currentItem}
+        onGrade={processReview}
+        showIntervalPredictions={plugin.settings.showIntervalPredictions}
+      />
     </ReviewCard>
   {/if}
 </div>
