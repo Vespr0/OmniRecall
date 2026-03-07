@@ -30,12 +30,20 @@
   type ViewStateType = (typeof ViewState)[keyof typeof ViewState];
 
   let currentState: ViewStateType = $state(ViewState.MENU);
+  let currentReviewPrefix: string | null = $state(null);
 
   function goMenu() {
     currentState = ViewState.MENU;
+    currentReviewPrefix = null;
   }
 
   function goReview() {
+    currentReviewPrefix = null;
+    currentState = ViewState.REVIEW;
+  }
+
+  function goReviewFiltered(prefix: string) {
+    currentReviewPrefix = prefix;
     currentState = ViewState.REVIEW;
   }
 
@@ -57,9 +65,10 @@
       {fsrsEngine}
       {parentView}
       {plugin}
+      reviewPrefix={currentReviewPrefix}
       onBack={goMenu}
     />
   {:else if currentState === ViewState.BROWSE}
-    <Browse {cacheManager} onBack={goMenu} />
+    <Browse {cacheManager} onBack={goMenu} {goReviewFiltered} />
   {/if}
 </div>

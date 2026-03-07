@@ -217,11 +217,15 @@ export class CacheManager extends Events {
     }
   }
 
-  public getReviewQueue(): { file: string; card: Flashcard }[] {
+  public getReviewQueue(prefix?: string | null): { file: string; card: Flashcard }[] {
     const queue: { file: string; card: Flashcard }[] = [];
     const now = new Date();
 
     for (const filePath in this.data) {
+      if (prefix && filePath !== prefix && !filePath.startsWith(prefix + "/")) {
+        continue;
+      }
+      
       for (const card of this.data[filePath].cards) {
         if (card.fsrsData) {
           // Due date is in the past or today

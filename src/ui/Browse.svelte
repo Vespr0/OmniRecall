@@ -8,9 +8,11 @@
   let {
     cacheManager,
     onBack,
+    goReviewFiltered,
   }: {
     cacheManager: CacheManager;
     onBack: () => void;
+    goReviewFiltered: (path: string) => void;
   } = $props();
 
   let tree = $derived.by(() => {
@@ -43,7 +45,7 @@
 </div>
 
 <div class="tree-container">
-  <BrowseFolder node={tree} depth={0} />
+  <BrowseFolder node={tree} depth={0} pathPrefix="" {goReviewFiltered} />
 </div>
 
 <style>

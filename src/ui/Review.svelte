@@ -21,6 +21,7 @@
     fsrsEngine,
     parentView,
     plugin,
+    reviewPrefix = null,
     onBack,
   }: {
     app: ObsidianApp;
@@ -28,6 +29,7 @@
     fsrsEngine: FSRSEngine;
     parentView: FSRSMainView;
     plugin: OmniRecallPlugin;
+    reviewPrefix?: string | null;
     onBack: () => void;
   } = $props();
 
@@ -41,7 +43,7 @@
   );
 
   onMount(() => {
-    reviewQueue = cacheManager.getReviewQueue();
+    reviewQueue = cacheManager.getReviewQueue(reviewPrefix);
     currentCardIndex = 0;
   });
 
@@ -104,7 +106,7 @@
       currentCardIndex++;
 
       if (currentCardIndex >= reviewQueue.length) {
-        reviewQueue = cacheManager.getReviewQueue();
+        reviewQueue = cacheManager.getReviewQueue(reviewPrefix);
         currentCardIndex = 0;
       }
     } catch (e) {

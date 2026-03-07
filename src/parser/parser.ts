@@ -9,6 +9,7 @@ export interface Flashcard {
     startIndex: number;
     endIndex: number;
     type: 'inline' | 'multiline';
+    context?: string[];
 }
 
 export class MarkdownParser {
@@ -65,6 +66,21 @@ export class MarkdownParser {
         }
 
         const sections = cache.sections;
+        const headings = cache.headings || [];
+
+        const getContext = (index: number): string[] => {
+            const activeHeadings: string[] = [];
+            for (const h of headings) {
+                if (h.position.start.offset < index) {
+                    activeHeadings[h.level - 1] = h.heading;
+                    activeHeadings.length = h.level; // truncate deeper levels
+                } else {
+                    break;
+                }
+            }
+            return activeHeadings.filter(h => h !== undefined);
+        };
+
         const inlineRegex = this.getInlineRegex();
         const mlDelimiter = `\\n${this.settings.multilineDelimiter}\\n`;
 
@@ -98,7 +114,8 @@ export class MarkdownParser {
                     fsrsData,
                     startIndex,
                     endIndex: fsrsData ? endIndex + fsrsData.rawString.length + this.getWhitespaceLength(text, endIndex) : endIndex,
-                    type: 'inline'
+                    type: 'inline',
+                    context: getContext(startIndex)
                 });
             }
         }
@@ -139,7 +156,8 @@ export class MarkdownParser {
                         fsrsData,
                         startIndex: blockStartIndex,
                         endIndex: fsrsData ? blockEndIndex : blockEndIndex,
-                        type: 'multiline'
+                        type: 'multiline',
+                        context: getContext(blockStartIndex)
                     });
                 }
                 

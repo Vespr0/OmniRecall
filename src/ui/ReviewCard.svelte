@@ -16,9 +16,18 @@
     parentView: FSRSMainView;
     currentItem: { file: string; card: Flashcard } | undefined;
     isShowingAnswer: boolean;
-    onShowAnswer: () => void;
     children: Snippet;
   } = $props();
+
+  let breadcrumbs = $derived.by(() => {
+    if (!currentItem) return "";
+    let fileName = currentItem.file.split("/").pop();
+    let parts = ["📄 " + fileName];
+    if (currentItem.card.context && currentItem.card.context.length > 0) {
+      parts.push(...currentItem.card.context);
+    }
+    return parts.join(" > ");
+  });
 
   let frontEl: HTMLElement = $state({} as HTMLElement);
   let backEl: HTMLElement = $state({} as HTMLElement);
@@ -61,6 +70,10 @@
   }}
   style="cursor: {isShowingAnswer ? 'default' : 'pointer'}"
 >
+  {#if currentItem}
+    <div class="card-context">{breadcrumbs}</div>
+  {/if}
+
   <div
     class="fsrs-front"
     bind:this={frontEl}
@@ -90,5 +103,17 @@
   .hint {
     margin-top: 20px;
     color: var(--text-muted);
+  }
+
+  .card-context {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 8px;
   }
 </style>
