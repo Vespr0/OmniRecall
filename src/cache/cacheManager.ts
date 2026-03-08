@@ -188,12 +188,15 @@ export class CacheManager extends Events {
   public async flushAll() {
     if (this.unbornWrites.size === 0) return;
 
+    const promises: Promise<void>[] = [];
     for (const [path, content] of this.unbornWrites.entries()) {
       const file = this.app.vault.getAbstractFileByPath(path);
       if (file instanceof TFile) {
-        await this.app.vault.modify(file, content);
+        promises.push(this.app.vault.modify(file, content));
       }
     }
+
+    await Promise.all(promises);
     this.unbornWrites.clear();
     this.unbornRanges.clear();
 
