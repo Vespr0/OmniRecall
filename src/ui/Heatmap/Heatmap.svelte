@@ -9,6 +9,12 @@
 
   let reviewHistory = $derived(plugin.settings.reviewHistory);
 
+  let maxCount = $derived(
+    Object.keys(reviewHistory).length > 0
+      ? Math.max(1, ...(Object.values(reviewHistory) as number[]))
+      : 1,
+  );
+
   // Create an array of 5 weeks (35 days) or exactly what's needed for the 7xN grid
   let calendarGrid = $state<({ date: string; count: number } | null)[][]>([]);
   let monthName = $state("");
@@ -92,7 +98,7 @@
       {#each calendarGrid as week}
         {#each week as day}
           {#if day}
-            <HeatmapCell {day} />
+            <HeatmapCell {day} {maxCount} />
           {:else}
             <!-- Empty placeholder cell for padding -->
             <div class="heatmap-cell empty"></div>

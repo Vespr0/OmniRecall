@@ -1,13 +1,15 @@
 <script lang="ts">
   let {
     day,
+    maxCount = 30,
   }: {
     day: { date: string; count: number };
+    maxCount?: number;
   } = $props();
 
   function getAlpha(count: number): number {
     if (count === 0) return 0.08;
-    return Math.min(1, 0.25 + (count / 30) * 0.75);
+    return Math.min(1, 0.25 + (count / Math.max(1, maxCount)) * 0.75);
   }
 </script>
 
