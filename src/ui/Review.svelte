@@ -36,6 +36,7 @@
   let reviewQueue: { file: string; card: Flashcard }[] = $state([]);
   let currentCardIndex = $state(0);
   let isShowingAnswer = $state(false);
+  let cardStartTime = $state(0);
 
   let currentItem = $derived(reviewQueue[currentCardIndex]);
   let isCompleted = $derived(
@@ -45,6 +46,7 @@
   onMount(() => {
     reviewQueue = cacheManager.getReviewQueue(reviewPrefix);
     currentCardIndex = 0;
+    cardStartTime = Date.now();
   });
 
   function showAnswer() {
@@ -55,6 +57,13 @@
 
   async function processReview(rating: Rating) {
     if (!currentItem) return;
+
+    const timeTaken = Date.now() - cardStartTime;
+    // Only count reasonable review times (between 0.5s and 60s)
+    if (timeTaken > 500 && timeTaken < 60000) {
+      const currentAvg = plugin.settings.avgReviewTime || 5000;
+      plugin.settings.avgReviewTime = currentAvg * 0.9 + timeTaken * 0.1;
+    }
 
     const now = new Date();
     const flashcard = currentItem.card;
@@ -104,6 +113,7 @@
 
       isShowingAnswer = false;
       currentCardIndex++;
+      cardStartTime = Date.now();
 
       if (currentCardIndex >= reviewQueue.length) {
         reviewQueue = cacheManager.getReviewQueue(reviewPrefix);

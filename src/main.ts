@@ -12,6 +12,7 @@ export interface FSRSPluginSettings {
 	inlineDelimiter: string;
 	multilineDelimiter: string;
 	reviewHistory: Record<string, number>;
+	avgReviewTime: number;
 	requestRetention: number;
 	showIntervalPredictions: boolean;
 }
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
 	inlineDelimiter: '::',
 	multilineDelimiter: '?',
 	reviewHistory: {},
+	avgReviewTime: 5000,
 	requestRetention: 0.9,
 	showIntervalPredictions: false
 }
