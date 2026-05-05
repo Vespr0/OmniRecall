@@ -68,15 +68,20 @@ export class MarkdownParser {
         const sections = cache.sections;
         const headings = cache.headings || [];
 
+        let headingIdx = 0;
+        const activeHeadings: string[] = [];
+
         const getContext = (index: number): string[] => {
-            const activeHeadings: string[] = [];
-            for (const h of headings) {
-                if (h.position.start.offset < index) {
-                    activeHeadings[h.level - 1] = h.heading;
-                    activeHeadings.length = h.level; // truncate deeper levels
-                } else {
-                    break;
-                }
+            if (headingIdx > 0 && headings[headingIdx - 1].position.start.offset >= index) {
+                headingIdx = 0;
+                activeHeadings.length = 0;
+            }
+
+            while (headingIdx < headings.length && headings[headingIdx].position.start.offset < index) {
+                const h = headings[headingIdx];
+                activeHeadings[h.level - 1] = h.heading;
+                activeHeadings.length = h.level;
+                headingIdx++;
             }
             return activeHeadings.filter(h => h !== undefined);
         };
