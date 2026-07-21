@@ -12,7 +12,7 @@ This plugin is designed with file syncing in mind. Whether you use Obsidian Sync
 - **Sync-Safe**: Your review history travels safely with your text. If your notes sync successfully, your flashcards sync successfully, easy.
 - **Edit Freely**: You can rewrite your flashcards, fix typos, or move them to completely different folders. The plugin will never lose track of your progress.
 - **Clean Notes**: The data is stored as a hidden HTML comment. While editing, you will only see a small, unobtrusive colored badge indicating the card's status (🔵 New, 🔴 Due, 🟢 Mature). _Please don't delete the colored markers, they make the app work!_
-- **Built for Students**: Flawlessly supports complex notes, including multi-line code blocks and LaTeX.
+- **Built for Versatility**: Flawlessly supports complex notes, including multi-line code blocks and LaTeX.
 
 ## How to Use
 

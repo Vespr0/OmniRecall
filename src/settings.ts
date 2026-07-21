@@ -1,7 +1,7 @@
 import { App, PluginSettingTab } from 'obsidian';
 import OmniRecallPlugin from './main';
 import { mount, unmount } from 'svelte';
-import SettingsApp from './ui/SettingsApp.svelte';
+import SettingsApp from './ui/settings/SettingsApp.svelte';
 
 export class OmniRecallSettingTab extends PluginSettingTab {
     plugin: OmniRecallPlugin;

@@ -2,12 +2,12 @@
   import type { App as ObsidianApp } from "obsidian";
   import type { CacheManager } from "../cache/cacheManager";
   import type { FSRSEngine } from "../fsrs/engine";
-  import type { FSRSMainView } from "./mainView";
+  import type { FSRSMainView } from "./common/mainView";
   import type OmniRecallPlugin from "../main";
 
-  import Menu from "./Menu.svelte";
-  import Review from "./Review.svelte";
-  import Browse from "./Browse.svelte";
+  import Menu from "./menu/Menu.svelte";
+  import Review from "./review/Review.svelte";
+  import Browse from "./browse/Browse.svelte";
 
   // Prevent TypeScript from stripping component imports because they are strictly used in the template
   const _components = { Menu, Review, Browse };

@@ -1,6 +1,6 @@
 import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 import { CacheManager, CacheData } from './cache/cacheManager';
-import { FSRSMainView, VIEW_TYPE_FSRS_MAIN } from './ui/mainView';
+import { FSRSMainView, VIEW_TYPE_FSRS_MAIN } from './ui/common/mainView';
 import { createFSRSDecoration, createBadgeDOM } from './ui/decorations/fsrsDecoration';
 
 import { OmniRecallSettingTab } from './settings';
@@ -15,6 +15,9 @@ export interface FSRSPluginSettings {
 	avgReviewTime: number;
 	requestRetention: number;
 	showIntervalPredictions: boolean;
+	enableAudio: boolean;
+	enableAnimations: boolean;
+	highestCombo: number;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
@@ -26,7 +29,10 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
 	reviewHistory: {},
 	avgReviewTime: 5000,
 	requestRetention: 0.9,
-	showIntervalPredictions: false
+	showIntervalPredictions: false,
+	enableAudio: true,
+	enableAnimations: true,
+	highestCombo: 0
 }
 
 export default class OmniRecallPlugin extends Plugin {
