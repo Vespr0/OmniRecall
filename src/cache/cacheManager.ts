@@ -6,10 +6,13 @@ import {
   SerializedFSRSData,
 } from "../fsrs/dataMap";
 import { FSRSPluginSettings } from "../main";
+import { DrillParser } from "../parser/drillParser";
+import { DrillCard } from "./drillTypes";
 
 export interface CacheEntry {
   mtime: number;
   cards: Flashcard[];
+  drills?: DrillCard[];
 }
 
 export type CacheData = Record<string, CacheEntry>;
@@ -17,6 +20,7 @@ export type CacheData = Record<string, CacheEntry>;
 export class CacheManager extends Events {
   private app: App;
   private parser: MarkdownParser;
+  private drillParser: DrillParser;
   private data: CacheData = {};
   private saveCallback: (data: CacheData) => Promise<void>;
   private unbornWrites: Map<string, string> = new Map(); // filePath -> newContent
@@ -33,6 +37,7 @@ export class CacheManager extends Events {
     this.app = app;
     this.data = this.rehydrateCache(initialData || {});
     this.parser = new MarkdownParser(app, settings);
+    this.drillParser = new DrillParser(app);
     this.saveCallback = saveCallback;
   }
 
@@ -91,6 +96,7 @@ export class CacheManager extends Events {
   public async processFile(file: TFile, skipTrigger = false) {
     const content = await this.app.vault.read(file);
     const cards = await this.parser.parseFile(file, content);
+    const drills = await this.drillParser.parseFile(file, content);
 
     let previousCards: Flashcard[] = [];
     const oldUnbornContent = this.unbornWrites.get(file.path);
@@ -148,22 +154,33 @@ export class CacheManager extends Events {
       this.unbornRanges.set(file.path, ranges);
 
       // Still update the cache so the Browse tab and other UI elements know about the cards
-      // Note: unborn cards won't appear in the review queue until they are flushed and parsed with their new FSRS data.
       this.data[file.path] = {
         mtime: file.stat.mtime,
         cards: cards,
+        drills: drills,
       };
     } else {
       // Update cache normally
       this.data[file.path] = {
         mtime: file.stat.mtime,
         cards: cards.filter((c) => c.fsrsData !== null), // Only cache valid tracked cards
+        drills: drills,
       };
     }
 
     if (!skipTrigger) {
       this.trigger("update");
     }
+  }
+
+  public getDrillsData(): Record<string, DrillCard[]> {
+    const map: Record<string, DrillCard[]> = {};
+    for (const filePath in this.data) {
+      if (this.data[filePath].drills && this.data[filePath].drills!.length > 0) {
+        map[filePath] = this.data[filePath].drills!;
+      }
+    }
+    return map;
   }
 
   public hasUnborn(filePath: string): boolean {

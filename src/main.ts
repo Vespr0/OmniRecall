@@ -5,6 +5,8 @@ import { createFSRSDecoration, createBadgeDOM } from './ui/decorations/fsrsDecor
 
 import { OmniRecallSettingTab } from './settings';
 
+import { DrillTelemetryRecord } from './cache/drillTypes';
+
 export interface FSRSPluginSettings {
 	cache: CacheData;
 	requireFlashcardTag: boolean;
@@ -18,6 +20,7 @@ export interface FSRSPluginSettings {
 	enableAudio: boolean;
 	enableAnimations: boolean;
 	highestCombo: number;
+	drillTelemetry: DrillTelemetryRecord;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
@@ -32,7 +35,8 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
 	showIntervalPredictions: false,
 	enableAudio: true,
 	enableAnimations: true,
-	highestCombo: 0
+	highestCombo: 0,
+	drillTelemetry: {}
 }
 
 export default class OmniRecallPlugin extends Plugin {
