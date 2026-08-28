@@ -236,17 +236,22 @@
 
       {#if showAnswer}
         <div class="drill-answer-section">
-          <h3>Answer</h3>
-          <div class="drill-answer" bind:this={answerEl}></div>
+          {#if currentDrill.type === 'multiple-choice'}
+            {#if feedbackMessage}
+              <div class="feedback-banner">{feedbackMessage}</div>
+            {/if}
+            <div class="eval-buttons">
+              <button class="eval-btn pass" onclick={nextCard}>Next Question →</button>
+            </div>
+          {:else}
+            <h3>Answer</h3>
+            <div class="drill-answer" bind:this={answerEl}></div>
 
-          {#if feedbackMessage}
-            <div class="feedback-banner">{feedbackMessage}</div>
+            <div class="eval-buttons">
+              <button class="eval-btn fail" onclick={handleFail}>❌ Fail / Retry</button>
+              <button class="eval-btn pass" onclick={handlePass}>✅ Pass</button>
+            </div>
           {/if}
-
-          <div class="eval-buttons">
-            <button class="eval-btn fail" onclick={handleFail}>❌ Fail / Retry</button>
-            <button class="eval-btn pass" onclick={handlePass}>✅ Pass</button>
-          </div>
         </div>
       {/if}
     </div>
