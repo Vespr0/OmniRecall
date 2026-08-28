@@ -3,11 +3,10 @@
   import { onMount, onDestroy } from "svelte";
   import type { EventRef } from "obsidian";
   import type OmniRecallPlugin from "../../main";
-  import Heatmap from "../Heatmap/Heatmap.svelte";
   import MenuStats from "./MenuStats.svelte";
   import MenuActions from "./MenuActions.svelte";
 
-  const _components = { Heatmap, MenuStats, MenuActions };
+  const _components = { MenuStats, MenuActions };
 
   let {
     cacheManager,
@@ -54,8 +53,6 @@
 
 <div class="menu-container">
   <h2>OmniRecall Statistics</h2>
-
-  <Heatmap {plugin} />
 
   <MenuStats {plugin} />
 

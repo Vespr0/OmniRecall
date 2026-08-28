@@ -114,6 +114,7 @@
       if (!plugin.settings.reviewHistory[todayStr]) {
         plugin.settings.reviewHistory[todayStr] = 0;
       }
+      plugin.settings.reviewHistory[todayStr]++;
       // Gamification updates
       if (
         rating === Rating.Hard ||
