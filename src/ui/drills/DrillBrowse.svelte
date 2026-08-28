@@ -1,18 +1,14 @@
 <script lang="ts">
-  import type { CacheManager } from '../../cache/cacheManager';
-  import type OmniRecallPlugin from '../../main';
-  import type { DrillCard } from '../../cache/drillTypes';
-  import DrillBrowseFolder from './DrillBrowseFolder.svelte';
+  import type { CacheManager } from "../../cache/cacheManager";
+  import BrowseFolder from "../browse/BrowseFolder.svelte";
 
-  const _components = { DrillBrowseFolder };
+  const _components = { BrowseFolder };
 
   let {
     cacheManager,
-    plugin,
     onStartDrill
   }: {
     cacheManager: CacheManager;
-    plugin: OmniRecallPlugin;
     onStartDrill: (path: string) => void;
   } = $props();
 
@@ -24,29 +20,17 @@
       const drills = drillsMap[filePath];
       if (drills.length === 0) continue;
 
-      const parts = filePath.split('/');
+      const parts = filePath.split("/");
       let current = t;
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         if (!current[part]) {
-          current[part] = {
-            totalCount: 0,
-            completedCount: 0
-          };
+          current[part] =
+            i === parts.length - 1
+              ? { _file: true, path: filePath, count: drills.length }
+              : {};
         }
-
-        const completedCount = drills.filter(d => plugin.settings.drillTelemetry[d.id]?.completed).length;
-
-        current[part].totalCount += drills.length;
-        current[part].completedCount += completedCount;
-
-        if (i === parts.length - 1) {
-          current[part]._file = true;
-          current[part].path = filePath;
-          current[part].drills = drills;
-        }
-
         current = current[part];
       }
     }
@@ -64,7 +48,7 @@
     </div>
   {:else}
     <div class="tree-container">
-      <DrillBrowseFolder node={tree} depth={0} pathPrefix="" {plugin} {onStartDrill} />
+      <BrowseFolder node={tree} depth={0} pathPrefix="" goReviewFiltered={onStartDrill} />
     </div>
   {/if}
 </div>
