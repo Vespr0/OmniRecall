@@ -57,14 +57,6 @@
     flex-direction: column;
   }
 
-  .hint {
-    margin-top: auto;
-    padding-top: 30px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.9em;
-  }
-
   .card-context {
     font-size: 0.85em;
     color: var(--text-muted);
