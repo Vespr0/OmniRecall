@@ -2,6 +2,9 @@
   import type { CacheManager } from '../../cache/cacheManager';
   import type OmniRecallPlugin from '../../main';
   import type { DrillCard } from '../../cache/drillTypes';
+  import DrillBrowseFolder from './DrillBrowseFolder.svelte';
+
+  const _components = { DrillBrowseFolder };
 
   let {
     cacheManager,
@@ -10,86 +13,58 @@
   }: {
     cacheManager: CacheManager;
     plugin: OmniRecallPlugin;
-    onStartDrill: (folderPath: string) => void;
+    onStartDrill: (path: string) => void;
   } = $props();
 
-  let drillsMap = $state(cacheManager.getDrillsData());
+  let tree = $derived.by(() => {
+    const t: Record<string, any> = {};
+    const drillsMap = cacheManager.getDrillsData();
 
-  interface FolderNode {
-    name: string;
-    path: string;
-    drills: DrillCard[];
-    children: Record<string, FolderNode>;
-  }
+    for (const filePath in drillsMap) {
+      const drills = drillsMap[filePath];
+      if (drills.length === 0) continue;
 
-  let folderTree = $derived(buildTree(drillsMap));
-
-  function buildTree(map: Record<string, DrillCard[]>): FolderNode {
-    const root: FolderNode = { name: 'Root', path: '', drills: [], children: {} };
-
-    for (const filePath in map) {
-      const cards = map[filePath];
       const parts = filePath.split('/');
-      parts.pop(); // Remove filename
+      let current = t;
 
-      let current = root;
-      let currentPath = '';
-
-      for (const part of parts) {
-        currentPath = currentPath ? `${currentPath}/${part}` : part;
-        if (!current.children[part]) {
-          current.children[part] = {
-            name: part,
-            path: currentPath,
-            drills: [],
-            children: {}
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (!current[part]) {
+          current[part] = {
+            totalCount: 0,
+            completedCount: 0
           };
         }
-        current = current.children[part];
+
+        const completedCount = drills.filter(d => plugin.settings.drillTelemetry[d.id]?.completed).length;
+
+        current[part].totalCount += drills.length;
+        current[part].completedCount += completedCount;
+
+        if (i === parts.length - 1) {
+          current[part]._file = true;
+          current[part].path = filePath;
+          current[part].drills = drills;
+        }
+
+        current = current[part];
       }
-      current.drills.push(...cards);
     }
-    return root;
-  }
-
-  function getFolderStats(node: FolderNode): { total: number; completed: number } {
-    let total = node.drills.length;
-    let completed = node.drills.filter(d => plugin.settings.drillTelemetry[d.id]?.completed).length;
-
-    for (const childKey in node.children) {
-      const sub = getFolderStats(node.children[childKey]);
-      total += sub.total;
-      completed += sub.completed;
-    }
-    return { total, completed };
-  }
+    return t;
+  });
 </script>
 
 <div class="drill-browse-container">
-  <h2>🎯 Exercise Drills Browser</h2>
+  <h2>🎯 Vault Drills Browser</h2>
 
-  {#if Object.keys(folderTree.children).length === 0}
+  {#if Object.keys(tree).length === 0}
     <div class="empty-state">
       <p>No drills found in vault.</p>
       <p class="hint">Tag any markdown file with <code>#drills</code> and add questions separated by <code>?</code>.</p>
     </div>
   {:else}
-    <div class="folder-list">
-      {#each Object.values(folderTree.children) as child}
-        {@const stats = getFolderStats(child)}
-        <div class="folder-card">
-          <div class="folder-info">
-            <span class="folder-icon">📁</span>
-            <div>
-              <div class="folder-name">{child.name}</div>
-              <div class="folder-stats">{stats.completed} / {stats.total} Completed</div>
-            </div>
-          </div>
-          <button class="start-btn" onclick={() => onStartDrill(child.path)}>
-            ▶ Start Drill
-          </button>
-        </div>
-      {/each}
+    <div class="tree-container">
+      <DrillBrowseFolder node={tree} depth={0} pathPrefix="" {plugin} {onStartDrill} />
     </div>
   {/if}
 </div>
@@ -98,7 +73,7 @@
   .drill-browse-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    height: 100%;
   }
   .empty-state {
     padding: 30px;
@@ -110,43 +85,8 @@
     font-size: 12px;
     color: var(--text-muted);
   }
-  .folder-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .folder-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--background-primary-alt);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-  }
-  .folder-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .folder-icon {
-    font-size: 20px;
-  }
-  .folder-name {
-    font-weight: 600;
-    font-size: 15px;
-  }
-  .folder-stats {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .start-btn {
-    padding: 6px 14px;
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+  .tree-container {
+    overflow-y: auto;
+    flex-grow: 1;
   }
 </style>
