@@ -39,8 +39,6 @@
 </script>
 
 <div class="drill-browse-container">
-  <h2>🎯 Vault Drills Browser</h2>
-
   {#if Object.keys(tree).length === 0}
     <div class="empty-state">
       <p>No drills found in vault.</p>

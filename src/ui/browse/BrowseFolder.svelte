@@ -39,14 +39,15 @@
 </script>
 
 {#each keys as key}
-  <div class="item" style="margin-left: {depth * 20}px;">
+  <div class="item" style="margin-left: calc(var(--depth-step, 16px) * {depth});">
     {#if node[key]._file}
       <div class="fsrs-browser-row">
-        <div class="file">📄 {key} ({node[key].count} cards)</div>
+        <div class="file">📄 {key} ({node[key].count})</div>
         <button
           class="play-btn"
           onclick={() => goReviewFiltered(node[key].path)}
           title="Review {key}"
+          aria-label="Review {key}"
         >
           <span class="icon" use:obsidianIcon={"play"}></span>
         </button>
@@ -71,6 +72,7 @@
           class="play-btn"
           onclick={() => goReviewFiltered(newPrefix)}
           title="Review folder {key}"
+          aria-label="Review folder {key}"
         >
           <span class="icon" use:obsidianIcon={"play"}></span>
         </button>
@@ -88,31 +90,45 @@
 {/each}
 
 <style>
+  :root {
+    --depth-step: 16px;
+  }
+  @media (max-width: 600px) {
+    :root {
+      --depth-step: 10px;
+    }
+  }
   .item {
-    padding: 5px 0;
+    padding: 3px 0;
   }
   .fsrs-browser-row {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
-    padding: 4px 8px;
-    border-radius: 4px;
+    gap: 10px;
+    padding: 8px 12px;
+    min-height: 40px;
+    border-radius: 6px;
     transition: background-color 0.1s ease;
     width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .fsrs-browser-row:hover {
     background-color: var(--background-modifier-hover);
   }
   .file {
     color: var(--text-normal);
+    font-size: 14px;
   }
   .folder-header {
     cursor: pointer;
     font-weight: bold;
     display: flex;
     align-items: center;
+    font-size: 14px;
+    touch-action: manipulation;
   }
   .tree-icon {
     margin-right: 6px;
@@ -125,17 +141,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    border-radius: 4px;
+    padding: 8px 12px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 6px;
     color: var(--text-muted);
+    touch-action: manipulation;
   }
   .play-btn:hover {
     background-color: var(--background-modifier-active-hover);
     color: var(--interactive-accent);
   }
   .icon :global(svg) {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     display: block;
   }
 </style>

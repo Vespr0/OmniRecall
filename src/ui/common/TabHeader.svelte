@@ -18,21 +18,26 @@
 <style>
   .omni-tab-header {
     display: flex;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 16px;
     border-bottom: 2px solid var(--background-modifier-border);
-    padding-bottom: 8px;
+    padding-bottom: 10px;
+    width: 100%;
   }
   .omni-tab-btn {
     background: transparent;
     border: none;
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 10px 20px;
+    min-height: 44px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: all 0.15s ease;
+    touch-action: manipulation;
   }
   .omni-tab-btn:hover {
     color: var(--text-normal);

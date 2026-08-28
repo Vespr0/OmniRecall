@@ -52,8 +52,6 @@
 </script>
 
 <div class="menu-container">
-  <h2>OmniRecall Statistics</h2>
-
   <MenuStats {plugin} />
 
   <MenuActions
