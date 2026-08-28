@@ -12,6 +12,8 @@
   import DrillBrowse from "./drills/DrillBrowse.svelte";
   import DrillSession from "./drills/DrillSession.svelte";
 
+  import { onMount, onDestroy } from "svelte";
+
   const _components = { Menu, Review, Browse, TabHeader, DrillBrowse, DrillSession };
 
   let {
@@ -36,6 +38,17 @@
   let currentState: ViewStateType = $state(ViewState.MENU);
   let currentReviewPrefix: string | null = $state(null);
   let currentDrillFolder: string = $state('');
+
+  onMount(() => {
+    const ref = (app.workspace as any).on('focus-calendar:break-start', () => {
+      if (currentState === ViewState.REVIEW || currentState === ViewState.DRILL_SESSION) {
+        goMenu();
+      }
+    });
+    return () => {
+      (app.workspace as any).offref(ref);
+    };
+  });
 
   function handleTabChange(tab: 'flashcards' | 'drills') {
     activeTab = tab;

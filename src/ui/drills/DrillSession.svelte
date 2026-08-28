@@ -48,11 +48,21 @@
     checkEndAutoPomodoro();
   });
 
+  function getTaskTitle(): string {
+    if (!folderPath) return "Drills";
+    let p = folderPath;
+    if (p.endsWith('.md')) {
+      const idx = p.lastIndexOf('/');
+      p = idx !== -1 ? p.substring(0, idx) : p;
+    }
+    return p;
+  }
+
   function checkAutoStartPomodoro() {
     try {
       const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
       if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
-        const title = `Drill: ${folderPath || 'Vault'}`;
+        const title = getTaskTitle();
         wasAutoStarted = fcPlugin.startAutoStudySession(title);
       }
     } catch (e) {
@@ -64,7 +74,7 @@
     const elapsedSec = Math.round(elapsedTimeMs / 1000);
     try {
       (app.workspace as any).trigger('omnirecall:drill-complete', {
-        title: folderPath || 'Vault',
+        title: getTaskTitle(),
         timeSec: elapsedSec
       });
 

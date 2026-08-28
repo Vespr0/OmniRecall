@@ -60,11 +60,21 @@
     checkEndAutoPomodoro();
   });
 
+  function getTaskTitle(): string {
+    if (!reviewPrefix) return "Flashcards";
+    let p = reviewPrefix;
+    if (p.endsWith('.md')) {
+      const idx = p.lastIndexOf('/');
+      p = idx !== -1 ? p.substring(0, idx) : p;
+    }
+    return p;
+  }
+
   function checkAutoStartPomodoro() {
     try {
       const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
       if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
-        const title = `Flashcards: ${reviewPrefix || 'Vault Queue'}`;
+        const title = getTaskTitle();
         wasAutoStarted = fcPlugin.startAutoStudySession(title);
       }
     } catch (e) {
@@ -76,7 +86,7 @@
     const elapsedSec = Math.round((Date.now() - sessionStartTime) / 1000);
     try {
       (app.workspace as any).trigger('omnirecall:review-complete', {
-        title: reviewPrefix || 'Vault Queue',
+        title: getTaskTitle(),
         timeSec: elapsedSec
       });
 
