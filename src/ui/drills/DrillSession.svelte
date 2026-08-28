@@ -33,17 +33,49 @@
 
   let currentDrill = $derived(drills[currentIndex] || null);
 
+  let wasAutoStarted: boolean = $state(false);
   let questionEl: HTMLElement | null = $state(null);
   let answerEl: HTMLElement | null = $state(null);
 
   onMount(() => {
     loadDrills();
     startTimer();
+    checkAutoStartPomodoro();
   });
 
   onDestroy(() => {
     stopTimer();
+    checkEndAutoPomodoro();
   });
+
+  function checkAutoStartPomodoro() {
+    try {
+      const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
+      if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
+        const title = `Drill: ${folderPath || 'Vault'}`;
+        wasAutoStarted = fcPlugin.startAutoStudySession(title);
+      }
+    } catch (e) {
+      console.error('Failed to trigger Focus Calendar interlock', e);
+    }
+  }
+
+  function checkEndAutoPomodoro() {
+    const elapsedSec = Math.round(elapsedTimeMs / 1000);
+    try {
+      (app.workspace as any).trigger('omnirecall:drill-complete', {
+        title: folderPath || 'Vault',
+        timeSec: elapsedSec
+      });
+
+      const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
+      if (fcPlugin && wasAutoStarted && typeof fcPlugin.endAutoStudySession === 'function') {
+        fcPlugin.endAutoStudySession();
+      }
+    } catch (e) {
+      console.error('Failed to end Focus Calendar interlock', e);
+    }
+  }
 
   function loadDrills() {
     const allDrillsMap = cacheManager.getDrillsData();

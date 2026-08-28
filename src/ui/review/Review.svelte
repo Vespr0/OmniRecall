@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import type { App as ObsidianApp } from "obsidian";
   import type { CacheManager } from "../../cache/cacheManager";
   import type { FSRSEngine } from "../../fsrs/engine";
@@ -38,8 +38,10 @@
   let currentCardIndex = $state(0);
   let isShowingAnswer = $state(false);
   let cardStartTime = $state(0);
+  let sessionStartTime = $state(Date.now());
   let combo = $state(0);
   let isShaking = $state(false);
+  let wasAutoStarted: boolean = $state(false);
 
   let currentItem = $derived(reviewQueue[currentCardIndex]);
   let isCompleted = $derived(
@@ -50,7 +52,42 @@
     reviewQueue = cacheManager.getReviewQueue(reviewPrefix);
     currentCardIndex = 0;
     cardStartTime = Date.now();
+    sessionStartTime = Date.now();
+    checkAutoStartPomodoro();
   });
+
+  onDestroy(() => {
+    checkEndAutoPomodoro();
+  });
+
+  function checkAutoStartPomodoro() {
+    try {
+      const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
+      if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
+        const title = `Flashcards: ${reviewPrefix || 'Vault Queue'}`;
+        wasAutoStarted = fcPlugin.startAutoStudySession(title);
+      }
+    } catch (e) {
+      console.error('Failed to trigger Focus Calendar interlock', e);
+    }
+  }
+
+  function checkEndAutoPomodoro() {
+    const elapsedSec = Math.round((Date.now() - sessionStartTime) / 1000);
+    try {
+      (app.workspace as any).trigger('omnirecall:review-complete', {
+        title: reviewPrefix || 'Vault Queue',
+        timeSec: elapsedSec
+      });
+
+      const fcPlugin = (app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
+      if (fcPlugin && wasAutoStarted && typeof fcPlugin.endAutoStudySession === 'function') {
+        fcPlugin.endAutoStudySession();
+      }
+    } catch (e) {
+      console.error('Failed to end Focus Calendar interlock', e);
+    }
+  }
 
   function toggleAnswer() {
     if (currentItem) {
