@@ -1,15 +1,22 @@
 {
-  "name": "omnirecall",
-  "version": "1.0.7",
-  "description": "OmniRecall spaced repetition flashcards for Obsidian",
+  "name": "spaced-repetition-fsrs",
+  "version": "1.0.8",
+  "description": "Spaced repetition flashcards with FSRS algorithm and interactive drills for Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
     "test": "jest"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "spaced-repetition",
+    "fsrs",
+    "flashcards",
+    "drills"
+  ],
+  "author": "Vespr0",
   "license": "MIT",
   "devDependencies": {
     "@codemirror/language": "^6.12.2",
@@ -21,11 +28,8 @@
     "@typescript-eslint/parser": "^7.0.1",
     "builtin-modules": "^3.3.0",
     "esbuild": "^0.20.0",
-    "esbuild-svelte": "^0.9.4",
     "jest": "^30.2.0",
-    "obsidian": "latest",
-    "svelte": "^5.53.6",
-    "svelte-preprocess": "^6.0.3",
+    "obsidian": "^1.5.7",
     "ts-jest": "^29.4.6",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"

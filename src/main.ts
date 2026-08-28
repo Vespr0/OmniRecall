@@ -1,164 +1,171 @@
-import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { CacheManager, CacheData } from './cache/cacheManager';
-import { FSRSMainView, VIEW_TYPE_FSRS_MAIN } from './ui/common/mainView';
-import { createFSRSDecoration, createBadgeDOM } from './ui/decorations/fsrsDecoration';
-
-import { OmniRecallSettingTab } from './settings';
-
+import { SpacedRepetitionMainView, VIEW_TYPE_SPACED_REPETITION } from './views/MainView';
+import { createFSRSDecoration, createBadgeDOM, createDrillBadgeDOM } from './decorations/fsrsDecoration';
+import { SpacedRepetitionSettingTab } from './settings';
 import { DrillTelemetryRecord } from './cache/drillTypes';
 
 export interface FSRSPluginSettings {
-	cache: CacheData;
-	requireFlashcardTag: boolean;
-	flashcardTag: string;
-	inlineDelimiter: string;
-	multilineDelimiter: string;
-	reviewHistory: Record<string, number>;
-	avgReviewTime: number;
-	requestRetention: number;
-	showIntervalPredictions: boolean;
-	enableAudio: boolean;
-	enableAnimations: boolean;
-	highestCombo: number;
-	drillTelemetry: DrillTelemetryRecord;
+  cache: CacheData;
+  requireFlashcardTag: boolean;
+  flashcardTag: string;
+  inlineDelimiter: string;
+  multilineDelimiter: string;
+  reviewHistory: Record<string, number>;
+  avgReviewTime: number;
+  requestRetention: number;
+  showIntervalPredictions: boolean;
+  enableAudio: boolean;
+  enableAnimations: boolean;
+  highestCombo: number;
+  drillTelemetry: DrillTelemetryRecord;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
-	cache: {},
-	requireFlashcardTag: true,
-	flashcardTag: '#flashcard',
-	inlineDelimiter: '::',
-	multilineDelimiter: '?',
-	reviewHistory: {},
-	avgReviewTime: 5000,
-	requestRetention: 0.9,
-	showIntervalPredictions: false,
-	enableAudio: true,
-	enableAnimations: true,
-	highestCombo: 0,
-	drillTelemetry: {}
-}
+  cache: {},
+  requireFlashcardTag: true,
+  flashcardTag: '#flashcard',
+  inlineDelimiter: '::',
+  multilineDelimiter: '?',
+  reviewHistory: {},
+  avgReviewTime: 5000,
+  requestRetention: 0.9,
+  showIntervalPredictions: false,
+  enableAudio: true,
+  enableAnimations: true,
+  highestCombo: 0,
+  drillTelemetry: {},
+};
 
-export default class OmniRecallPlugin extends Plugin {
-	settings!: FSRSPluginSettings;
-	cacheManager!: CacheManager;
+export default class SpacedRepetitionPlugin extends Plugin {
+  settings: FSRSPluginSettings = DEFAULT_SETTINGS;
+  cacheManager!: CacheManager;
 
-	async onload() {
-		console.log('Loading OmniRecall plugin');
-		
-		await this.loadSettings();
+  async onload() {
+    console.log('Loading Spaced Repetition (FSRS) plugin');
 
-		this.cacheManager = new CacheManager(this.app, this.settings.cache, async (data) => {
-			this.settings.cache = data;
-			await this.saveSettings();
-		}, this.settings);
+    await this.loadSettings();
 
-		this.app.workspace.onLayoutReady(async () => {
-			await this.cacheManager.scanVault();
-			
-			this.registerEvent(
-				this.app.metadataCache.on('changed', async (file: TFile) => {
-					if (file.extension === 'md') {
-						await this.cacheManager.processFile(file);
-					}
-				})
-			);
+    this.cacheManager = new CacheManager(
+      this.app,
+      this.settings.cache,
+      async (data) => {
+        this.settings.cache = data;
+        await this.saveSettings();
+      },
+      this.settings
+    );
 
-			this.registerEvent(
-				this.app.workspace.on('active-leaf-change', async () => {
-					await this.cacheManager.flushAll();
-				})
-			);
+    this.app.workspace.onLayoutReady(async () => {
+      await this.cacheManager.scanVault();
 
-			this.registerEvent(
-				this.app.workspace.on('quit', async () => {
-					await this.cacheManager.flushAll();
-				})
-			);
-		});
+      this.registerEvent(
+        this.app.metadataCache.on('changed', async (file: TFile) => {
+          if (file.extension === 'md') {
+            await this.cacheManager.processFile(file);
+          }
+        })
+      );
 
-		this.registerView(
-			VIEW_TYPE_FSRS_MAIN,
-			(leaf) => new FSRSMainView(leaf, this.cacheManager, this)
-		);
+      this.registerEvent(
+        this.app.workspace.on('active-leaf-change', async () => {
+          await this.cacheManager.flushAll();
+        })
+      );
 
-		this.addRibbonIcon('brain-circuit', 'OmniRecall', (evt: MouseEvent) => {
-			this.activateView();
-		});
+      this.registerEvent(
+        this.app.workspace.on('quit', async () => {
+          await this.cacheManager.flushAll();
+        })
+      );
+    });
 
-		this.addSettingTab(new OmniRecallSettingTab(this.app, this));
+    // Register View
+    this.registerView(
+      VIEW_TYPE_SPACED_REPETITION,
+      (leaf) => new SpacedRepetitionMainView(leaf, this.cacheManager, this)
+    );
 
-		this.addCommand({
-			id: 'open-fsrs-review',
-			name: 'Open OmniRecall Review',
-			callback: () => {
-				this.activateView();
-			}
-		});
+    // Backward-compatibility view alias for legacy workspace layouts
+    this.registerView(
+      'omnirecall-main-view',
+      (leaf) => new SpacedRepetitionMainView(leaf, this.cacheManager, this)
+    );
 
-		// Hide FSRS comments in Reading View
-		this.registerMarkdownPostProcessor((element, context) => {
-			const walker = document.createTreeWalker(element, NodeFilter.SHOW_COMMENT, null);
-			let node: Comment | null = null;
-			const toRemove: Comment[] = [];
-			
-			// Extract all matching comments first to avoid tree mutation issues
-			while (true) {
-				const nextNode = walker.nextNode();
-				if (!nextNode) break;
-				
-				const n = nextNode as Comment;
-				if (n.nodeValue && n.nodeValue.startsWith('FSRS:')) {
-					toRemove.push(n);
-				}
-			}
-			
-			toRemove.forEach(n => {
-				const parent = n.parentNode;
-				if (parent && n.nodeValue) {
-					// Reconstruct the full string since nodeValue removes the comment tags
-					const fullString = `<!--${n.nodeValue}-->`;
-					const badge = createBadgeDOM(fullString);
-					parent.replaceChild(badge, n);
-				}
-			});
-		});
+    this.addRibbonIcon('brain-circuit', 'Testing', () => {
+      this.activateView();
+    });
 
-		// Hide FSRS comments in Live Preview + trigger Spatial Blur logic
-		this.registerEditorExtension(createFSRSDecoration(this.app, this.cacheManager, this.settings));
+    this.addSettingTab(new SpacedRepetitionSettingTab(this.app, this));
 
-		// Basic setup done.
-	}
+    this.addCommand({
+      id: 'open-fsrs-review',
+      name: 'Open Testing View',
+      callback: () => {
+        this.activateView();
+      },
+    });
 
-	async activateView() {
-		const { workspace } = this.app;
+    // Hide FSRS & DRILL comments in Reading View
+    this.registerMarkdownPostProcessor((element) => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_COMMENT, null);
+      const toProcess: { node: Comment; type: 'fsrs' | 'drill' }[] = [];
 
-		// Trigger B: State Request (Review Initialization)
-		// Ensure any unborn cards in memory are safely written to disk before launching review
-		await this.cacheManager.flushAll();
+      while (true) {
+        const nextNode = walker.nextNode();
+        if (!nextNode) break;
 
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_FSRS_MAIN);
+        const n = nextNode as Comment;
+        if (n.nodeValue && n.nodeValue.startsWith('FSRS:')) {
+          toProcess.push({ node: n, type: 'fsrs' });
+        } else if (n.nodeValue && n.nodeValue.startsWith('DRILL:')) {
+          toProcess.push({ node: n, type: 'drill' });
+        }
+      }
 
-		if (leaves.length > 0) {
-			leaf = leaves[0];
-		} else {
-			leaf = workspace.getLeaf('tab');
-			await leaf.setViewState({ type: VIEW_TYPE_FSRS_MAIN, active: true });
-		}
+      toProcess.forEach(({ node, type }) => {
+        const parent = node.parentNode;
+        if (parent && node.nodeValue) {
+          const fullString = `<!--${node.nodeValue}-->`;
+          const badge = type === 'fsrs'
+            ? createBadgeDOM(fullString, this.settings)
+            : createDrillBadgeDOM(fullString);
+          parent.replaceChild(badge, node);
+        }
+      });
+    });
 
-		workspace.revealLeaf(leaf);
-	}
+    // Hide FSRS comments in Live Preview + trigger Spatial Blur logic
+    this.registerEditorExtension(createFSRSDecoration(this.app, this.cacheManager, this.settings));
+  }
 
-	onunload() {
-		console.log('Unloading OmniRecall plugin');
-	}
+  async activateView() {
+    const { workspace } = this.app;
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+    await this.cacheManager.flushAll();
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+    let leaf: WorkspaceLeaf | null = null;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_SPACED_REPETITION);
+
+    if (leaves.length > 0) {
+      leaf = leaves[0];
+    } else {
+      leaf = workspace.getLeaf('tab');
+      await leaf.setViewState({ type: VIEW_TYPE_SPACED_REPETITION, active: true });
+    }
+
+    workspace.revealLeaf(leaf);
+  }
+
+  onunload() {
+    console.log('Unloading Spaced Repetition (FSRS) plugin');
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }

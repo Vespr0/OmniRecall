@@ -1,4 +1,5 @@
 export type DrillType = 'standard' | 'multiple-choice';
+export type DrillStatus = 'completed' | 'uncompleted';
 
 export interface MultipleChoiceOption {
   text: string;
@@ -13,6 +14,10 @@ export interface DrillCard {
   answer: string;
   type: DrillType;
   options: MultipleChoiceOption[];
+  completed: boolean;
+  attempts: number;
+  lastCompletedAt: number;
+  rawMetadata?: string | null;
   startIndex: number;
   endIndex: number;
 }

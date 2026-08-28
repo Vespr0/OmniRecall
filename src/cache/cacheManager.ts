@@ -237,6 +237,21 @@ export class CacheManager extends Events {
     }
   }
 
+  public updateDrillData(
+    filePath: string,
+    drillId: string,
+    drillUpdate: Partial<DrillCard>,
+  ) {
+    const entry = this.data[filePath];
+    if (entry && entry.drills) {
+      const drill = entry.drills.find((d) => d.id === drillId);
+      if (drill) {
+        Object.assign(drill, drillUpdate);
+        this.trigger("update");
+      }
+    }
+  }
+
   public getReviewQueue(prefix?: string | null): { file: string; card: Flashcard }[] {
     const queue: { file: string; card: Flashcard }[] = [];
     const now = new Date();

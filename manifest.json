@@ -1,9 +1,9 @@
 {
-	"id": "omnirecall",
-	"name": "OmniRecall",
-	"version": "1.0.7",
+	"id": "spaced-repetition-fsrs",
+	"name": "Spaced Repetition (FSRS)",
+	"version": "1.0.8",
 	"minAppVersion": "1.5.0",
-	"description": "A spaced repetition flashcard plugin that uses the FSRS algorithm. Synchronizes via text using inline HTML comments.",
+	"description": "Spaced repetition flashcards with FSRS algorithm and interactive drills for Obsidian.",
 	"author": "Vespr0",
 	"authorUrl": "https://github.com/Vespr0",
 	"isDesktopOnly": false

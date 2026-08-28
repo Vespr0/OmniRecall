@@ -1,6 +1,8 @@
 import { App, TFile } from 'obsidian';
 import { DrillCard, MultipleChoiceOption, DrillType } from '../cache/drillTypes';
 
+export const DRILL_REGEX = /<!--DRILL:([A-Za-z0-9_-]+)\|(completed|uncompleted)\|(\d+)\|(\d+)-->/;
+
 export class DrillParser {
   private app: App;
 
@@ -35,9 +37,27 @@ export class DrillParser {
       if (qIndex === -1) continue;
 
       const question = block.substring(0, qIndex).replace(/#drills/g, '').trim();
-      const back = block.substring(qIndex + 3).trim();
+      let back = block.substring(qIndex + 3).trim();
 
       if (!question || !back) continue;
+
+      // Extract in-markdown DRILL metadata comment if present
+      let drillId = `drill-${file.path}-${blockStartIndex}`;
+      let completed = false;
+      let attempts = 0;
+      let lastCompletedAt = 0;
+      let rawMetadata: string | null = null;
+
+      const drillMatch = DRILL_REGEX.exec(back);
+      if (drillMatch) {
+        drillId = drillMatch[1];
+        completed = drillMatch[2] === 'completed';
+        attempts = parseInt(drillMatch[3], 10) || 0;
+        lastCompletedAt = parseInt(drillMatch[4], 10) || 0;
+        rawMetadata = drillMatch[0];
+        // Strip the DRILL comment from the answer body for clean rendering
+        back = back.replace(drillMatch[0], '').trim();
+      }
 
       const optionLines = back.split('\n').filter(line => /^\s*-\s*\[[ xX]\]/.test(line));
       let type: DrillType = 'standard';
@@ -53,16 +73,19 @@ export class DrillParser {
       }
 
       const folderPath = file.parent ? file.parent.path : '/';
-      const cardId = `drill-${file.path}-${blockStartIndex}`;
 
       drills.push({
-        id: cardId,
+        id: drillId,
         filePath: file.path,
         folderPath,
         question,
         answer: back,
         type,
         options,
+        completed,
+        attempts,
+        lastCompletedAt,
+        rawMetadata,
         startIndex: blockStartIndex,
         endIndex: blockEndIndex
       });
