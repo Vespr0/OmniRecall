@@ -106,21 +106,18 @@ export class ReviewView {
   }
 
   private getTaskTitle(): string {
-    if (!this.reviewPrefix) return 'Flashcards';
-    let p = this.reviewPrefix;
-    if (p.endsWith('.md')) {
-      const idx = p.lastIndexOf('/');
-      p = idx !== -1 ? p.substring(0, idx) : p;
-    }
-    return p;
+    return 'Flashcards';
   }
 
   private checkAutoStartPomodoro() {
     try {
       const fcPlugin = (this.app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
-      if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
-        const title = this.getTaskTitle();
-        this.wasAutoStarted = fcPlugin.startAutoStudySession(title);
+      if (fcPlugin) {
+        if (typeof fcPlugin.startAutoFlashcardSession === 'function') {
+          this.wasAutoStarted = fcPlugin.startAutoFlashcardSession();
+        } else if (typeof fcPlugin.startAutoStudySession === 'function') {
+          this.wasAutoStarted = fcPlugin.startAutoStudySession('Flashcards');
+        }
       }
     } catch (e) {
       console.error('Failed to trigger Focus Calendar interlock', e);
@@ -130,12 +127,8 @@ export class ReviewView {
   private checkEndAutoPomodoro() {
     const elapsedSec = Math.round((Date.now() - this.sessionStartTime) / 1000);
     try {
-      (this.app.workspace as any).trigger('omnirecall:review-complete', {
-        title: this.getTaskTitle(),
-        timeSec: elapsedSec,
-      });
       (this.app.workspace as any).trigger('spaced-repetition:review-complete', {
-        title: this.getTaskTitle(),
+        title: 'Flashcards',
         timeSec: elapsedSec,
       });
 

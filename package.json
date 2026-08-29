@@ -1,6 +1,6 @@
 {
   "name": "spaced-repetition-fsrs",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Spaced repetition flashcards with FSRS algorithm and interactive drills for Obsidian.",
   "main": "main.js",
   "scripts": {

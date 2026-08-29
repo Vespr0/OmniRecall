@@ -253,21 +253,18 @@ export class DrillSessionView {
   }
 
   private getTaskTitle(): string {
-    if (!this.folderPath) return 'Drills';
-    let p = this.folderPath;
-    if (p.endsWith('.md')) {
-      const idx = p.lastIndexOf('/');
-      p = idx !== -1 ? p.substring(0, idx) : p;
-    }
-    return p;
+    return 'Drills';
   }
 
   private checkAutoStartPomodoro() {
     try {
       const fcPlugin = (this.app as any).plugins?.plugins?.['focus-calendar-pomodoro'];
-      if (fcPlugin && typeof fcPlugin.startAutoStudySession === 'function') {
-        const title = this.getTaskTitle();
-        this.wasAutoStarted = fcPlugin.startAutoStudySession(title);
+      if (fcPlugin) {
+        if (typeof fcPlugin.startAutoDrillSession === 'function') {
+          this.wasAutoStarted = fcPlugin.startAutoDrillSession();
+        } else if (typeof fcPlugin.startAutoStudySession === 'function') {
+          this.wasAutoStarted = fcPlugin.startAutoStudySession('Drills');
+        }
       }
     } catch (e) {
       console.error('Failed to trigger Focus Calendar interlock', e);
@@ -277,12 +274,8 @@ export class DrillSessionView {
   private checkEndAutoPomodoro() {
     const elapsedSec = Math.round(this.elapsedTimeMs / 1000);
     try {
-      (this.app.workspace as any).trigger('omnirecall:drill-complete', {
-        title: this.getTaskTitle(),
-        timeSec: elapsedSec,
-      });
       (this.app.workspace as any).trigger('spaced-repetition:drill-complete', {
-        title: this.getTaskTitle(),
+        title: 'Drills',
         timeSec: elapsedSec,
       });
 
