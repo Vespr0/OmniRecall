@@ -1,4 +1,4 @@
-export type DrillType = 'standard' | 'multiple-choice';
+export type DrillType = 'standard' | 'single-choice' | 'multiple-choice';
 export type DrillStatus = 'completed' | 'uncompleted';
 
 export interface MultipleChoiceOption {

@@ -160,6 +160,11 @@ export class SpacedRepetitionMainView extends ItemView {
         this.activeSubView = new BrowseView(
           contentSlot,
           this.cacheManager,
+          this.plugin.settings.expandedFlashcardFolders || {},
+          async (expanded) => {
+            this.plugin.settings.expandedFlashcardFolders = expanded;
+            await this.plugin.saveSettings();
+          },
           () => this.goMenu(),
           (path) => this.goReview(path)
         );
@@ -183,6 +188,11 @@ export class SpacedRepetitionMainView extends ItemView {
         this.activeSubView = new DrillBrowseView(
           contentSlot,
           this.cacheManager,
+          this.plugin.settings.expandedDrillFolders || {},
+          async (expanded) => {
+            this.plugin.settings.expandedDrillFolders = expanded;
+            await this.plugin.saveSettings();
+          },
           (folderPath) => this.startDrill(folderPath)
         );
       }

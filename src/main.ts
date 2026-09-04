@@ -1,4 +1,4 @@
-import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, TFile, WorkspaceLeaf, Editor } from 'obsidian';
 import { CacheManager, CacheData } from './cache/cacheManager';
 import { SpacedRepetitionMainView, VIEW_TYPE_SPACED_REPETITION } from './views/MainView';
 import { createFSRSDecoration, createBadgeDOM, createDrillBadgeDOM } from './decorations/fsrsDecoration';
@@ -19,6 +19,8 @@ export interface FSRSPluginSettings {
   enableAnimations: boolean;
   highestCombo: number;
   drillTelemetry: DrillTelemetryRecord;
+  expandedDrillFolders: Record<string, boolean>;
+  expandedFlashcardFolders: Record<string, boolean>;
 }
 
 const DEFAULT_SETTINGS: FSRSPluginSettings = {
@@ -35,6 +37,8 @@ const DEFAULT_SETTINGS: FSRSPluginSettings = {
   enableAnimations: true,
   highestCombo: 0,
   drillTelemetry: {},
+  expandedDrillFolders: {},
+  expandedFlashcardFolders: {},
 };
 
 export default class SpacedRepetitionPlugin extends Plugin {
@@ -103,6 +107,24 @@ export default class SpacedRepetitionPlugin extends Plugin {
       name: 'Open Testing View',
       callback: () => {
         this.activateView();
+      },
+    });
+
+    this.addCommand({
+      id: 'insert-single-choice-drill',
+      name: 'Insert Single-Choice Drill Template',
+      editorCallback: (editor: Editor) => {
+        const template = `Question statement here\n?\n- ( ) Option A\n- (x) Correct Option B\n- ( ) Option C\n- ( ) Option D\n\n**Solution / Explanation:**\nExplanation of why B is correct.`;
+        editor.replaceSelection(template);
+      },
+    });
+
+    this.addCommand({
+      id: 'insert-multiple-choice-drill',
+      name: 'Insert Multiple-Choice Drill Template',
+      editorCallback: (editor: Editor) => {
+        const template = `Question statement here (Select all that apply)\n?\n- [x] Correct Option A\n- [ ] Distractor Option B\n- [x] Correct Option C\n- [ ] Distractor Option D\n\n**Solution / Explanation:**\nExplanation of why A and C are correct.`;
+        editor.replaceSelection(template);
       },
     });
 

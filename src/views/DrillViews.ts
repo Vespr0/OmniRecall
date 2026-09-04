@@ -18,15 +18,20 @@ export class DrillBrowseView {
   private containerEl: HTMLElement;
   private cacheManager: CacheManager;
   private onStartDrill: (path: string) => void;
-  private expandedFolders: Record<string, boolean> = {};
+  private expandedFolders: Record<string, boolean>;
+  private onToggleFolder?: (expanded: Record<string, boolean>) => void;
 
   constructor(
     containerEl: HTMLElement,
     cacheManager: CacheManager,
+    expandedFolders: Record<string, boolean>,
+    onToggleFolder: (expanded: Record<string, boolean>) => void,
     onStartDrill: (path: string) => void
   ) {
     this.containerEl = containerEl;
     this.cacheManager = cacheManager;
+    this.expandedFolders = expandedFolders;
+    this.onToggleFolder = onToggleFolder;
     this.onStartDrill = onStartDrill;
 
     this.render();
@@ -132,8 +137,8 @@ export class DrillBrowseView {
         const isAllDone = node.uncompleted === 0;
 
         const textLabel = isAllDone
-          ? `✅ ${key} (${node.completed}/${node.count} completed)`
-          : `🎯 ${key} (${node.uncompleted} remaining / ${node.count})`;
+          ? `✅ ${key} (Completed)`
+          : `🎯 ${key} (${node.uncompleted} remaining)`;
 
         const nameEl = row.createDiv({ cls: 'srf-file-name', text: textLabel });
         if (isAllDone) {
@@ -167,8 +172,8 @@ export class DrillBrowseView {
         });
 
         const folderText = isAllFolderDone
-          ? `${key} (✅ All ${node.count} completed)`
-          : `${key} (${node.uncompleted} remaining / ${node.count})`;
+          ? `${key} (✅ Completed)`
+          : `${key} (${node.uncompleted} remaining)`;
 
         folderHeader.createSpan({ text: folderText });
         if (isAllFolderDone) {
@@ -177,6 +182,9 @@ export class DrillBrowseView {
 
         folderHeader.onclick = () => {
           this.expandedFolders[newPrefix] = !this.expandedFolders[newPrefix];
+          if (this.onToggleFolder) {
+            this.onToggleFolder(this.expandedFolders);
+          }
           this.render();
         };
 
@@ -478,9 +486,15 @@ export class DrillSessionView {
       });
     }
 
+    const typeLabel =
+      currentDrill.type === 'single-choice'
+        ? 'Single Choice'
+        : currentDrill.type === 'multiple-choice'
+        ? 'Multiple Choice'
+        : 'Q&A';
     meta.createSpan({
-      cls: 'srf-type-tag',
-      text: currentDrill.type === 'multiple-choice' ? 'Multiple Choice' : 'Q&A',
+      cls: `srf-type-tag ${currentDrill.type}`,
+      text: typeLabel,
     });
 
     // Question
@@ -493,8 +507,10 @@ export class DrillSessionView {
       this.parentComponent
     );
 
-    // Multiple Choice vs Q&A
-    if (currentDrill.type === 'multiple-choice') {
+    // Single Choice & Multiple Choice vs Q&A
+    const isChoice = currentDrill.type === 'single-choice' || currentDrill.type === 'multiple-choice';
+    if (isChoice) {
+      const isSingle = currentDrill.type === 'single-choice';
       const optionsGrid = card.createDiv('srf-options-grid');
 
       currentDrill.options.forEach((opt, idx) => {
@@ -509,12 +525,16 @@ export class DrillSessionView {
         }
 
         const optBtn = optionsGrid.createEl('button', {
-          cls: `srf-option-btn ${statusClass}`,
+          cls: `srf-option-btn ${statusClass} ${isSingle ? 'srf-radio' : 'srf-checkbox'}`,
           disabled: this.showAnswer,
         });
 
-        optBtn.createSpan({ text: isSelected ? '☑ ' : '☐ ' });
-        const textSpan = optBtn.createSpan();
+        const bulletIcon = isSingle
+          ? (isSelected ? '🔘 ' : '⚪ ')
+          : (isSelected ? '☑ ' : '☐ ');
+
+        optBtn.createSpan({ cls: 'srf-option-bullet', text: bulletIcon });
+        const textSpan = optBtn.createSpan({ cls: 'srf-option-text' });
         MarkdownRenderer.render(
           this.app,
           opt.text,
@@ -525,10 +545,15 @@ export class DrillSessionView {
 
         optBtn.onclick = () => {
           if (this.showAnswer) return;
-          if (this.selectedOptionIndices.has(idx)) {
-            this.selectedOptionIndices.delete(idx);
-          } else {
+          if (isSingle) {
+            this.selectedOptionIndices.clear();
             this.selectedOptionIndices.add(idx);
+          } else {
+            if (this.selectedOptionIndices.has(idx)) {
+              this.selectedOptionIndices.delete(idx);
+            } else {
+              this.selectedOptionIndices.add(idx);
+            }
           }
           this.render();
         };
@@ -586,13 +611,32 @@ export class DrillSessionView {
     if (this.showAnswer) {
       const ansSection = card.createDiv('srf-drill-answer-section');
 
-      if (currentDrill.type === 'multiple-choice') {
+      if (currentDrill.type === 'single-choice' || currentDrill.type === 'multiple-choice') {
         if (this.feedbackMessage) {
           ansSection.createDiv({
             cls: 'srf-feedback-banner',
             text: this.feedbackMessage,
           });
         }
+
+        const explanation = currentDrill.answer
+          .split('\n')
+          .filter((line) => !/^\s*(?:[-*]|\d+\.)\s*(?:\[[ xX]\]|\([ xX]\))/.test(line))
+          .join('\n')
+          .trim();
+
+        if (explanation) {
+          ansSection.createEl('h3', { cls: 'srf-drill-answer-title', text: 'Solution / Explanation' });
+          const ansEl = ansSection.createDiv('srf-drill-answer');
+          MarkdownRenderer.render(
+            this.app,
+            explanation,
+            ansEl,
+            currentDrill.filePath,
+            this.parentComponent
+          );
+        }
+
         const evalBtns = ansSection.createDiv('srf-eval-buttons');
         const nextBtn = evalBtns.createEl('button', {
           cls: 'srf-eval-btn pass',

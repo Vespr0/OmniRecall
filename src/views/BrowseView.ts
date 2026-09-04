@@ -6,16 +6,21 @@ export class BrowseView {
   private cacheManager: CacheManager;
   private onBack: () => void;
   private goReviewFiltered: (path: string) => void;
-  private expandedFolders: Record<string, boolean> = {};
+  private expandedFolders: Record<string, boolean>;
+  private onToggleFolder?: (expanded: Record<string, boolean>) => void;
 
   constructor(
     containerEl: HTMLElement,
     cacheManager: CacheManager,
+    expandedFolders: Record<string, boolean>,
+    onToggleFolder: (expanded: Record<string, boolean>) => void,
     onBack: () => void,
     goReviewFiltered: (path: string) => void
   ) {
     this.containerEl = containerEl;
     this.cacheManager = cacheManager;
+    this.expandedFolders = expandedFolders;
+    this.onToggleFolder = onToggleFolder;
     this.onBack = onBack;
     this.goReviewFiltered = goReviewFiltered;
 
@@ -95,6 +100,9 @@ export class BrowseView {
 
         folderHeader.onclick = () => {
           this.expandedFolders[newPrefix] = !this.expandedFolders[newPrefix];
+          if (this.onToggleFolder) {
+            this.onToggleFolder(this.expandedFolders);
+          }
           this.render();
         };
 

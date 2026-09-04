@@ -59,16 +59,45 @@ export class DrillParser {
         back = back.replace(drillMatch[0], '').trim();
       }
 
-      const optionLines = back.split('\n').filter(line => /^\s*-\s*\[[ xX]\]/.test(line));
+      const rawLines = back.split('\n');
+      const parsedOptions: { text: string; isCorrect: boolean; isRadio: boolean }[] = [];
+
+      for (const line of rawLines) {
+        // Matches - [x], - [ ], - (x), - ( ), * [x], 1. [x], etc.
+        const match = /^\s*(?:[-*]|\d+\.)\s*(?:\[([ xX])\]|\(([ xX])\))\s*(.*)/.exec(line);
+        if (match) {
+          const isRadio = match[2] !== undefined;
+          const mark = isRadio ? match[2] : match[1];
+          const isCorrect = mark.toLowerCase() === 'x';
+          const optionText = match[3].trim();
+          parsedOptions.push({ text: optionText, isCorrect, isRadio });
+        }
+      }
+
       let type: DrillType = 'standard';
       const options: MultipleChoiceOption[] = [];
 
-      if (optionLines.length > 0) {
-        type = 'multiple-choice';
-        for (const line of optionLines) {
-          const isCorrect = /^\s*-\s*\[[xX]\]/.test(line);
-          const optionText = line.replace(/^\s*-\s*\[[ xX]\]\s*/, '').trim();
-          options.push({ text: optionText, isCorrect });
+      if (parsedOptions.length > 0) {
+        const correctCount = parsedOptions.filter(o => o.isCorrect).length;
+        const hasRadio = parsedOptions.some(o => o.isRadio);
+        const combinedText = `${question}\n${back}`;
+        const isExplicitSingle = /#(?:single|single-choice)\b|\[single\]/i.test(combinedText);
+        const isExplicitMulti = /#(?:multi|multiple|multiple-choice)\b|\[multi\]|select all/i.test(combinedText);
+
+        if (isExplicitSingle) {
+          type = 'single-choice';
+        } else if (isExplicitMulti) {
+          type = 'multiple-choice';
+        } else if (hasRadio) {
+          type = 'single-choice';
+        } else if (correctCount === 1) {
+          type = 'single-choice';
+        } else {
+          type = 'multiple-choice';
+        }
+
+        for (const opt of parsedOptions) {
+          options.push({ text: opt.text, isCorrect: opt.isCorrect });
         }
       }
 
